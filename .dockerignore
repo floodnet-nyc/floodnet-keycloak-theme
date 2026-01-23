@@ -1,0 +1,6 @@
+README.md
+Dockerfile
+docker-compose.yml
+**/.git
+**/.DS_Store
+**/node_modules

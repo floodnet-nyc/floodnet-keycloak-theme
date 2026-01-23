@@ -1,0 +1,105 @@
+/*
+ * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.login-pf a {
+    color: #6affd3;
+    text-decoration: underline;
+}
+
+.login-pf body {
+    background-color: #030005;
+    background:
+        linear-gradient(#1a405e59, #0034ffb0 90%),
+        linear-gradient(143deg, #ff6feb57 10.92%, #01042a75 52.1%),
+        url('../img/9thst.jpg')
+        no-repeat center center fixed;
+    background-repeat: no-repeat;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    background-blend-mode: darken;
+    -webkit-background-blend-mode: darken;
+
+    color: #fff;
+    font-family: sans-serif;
+    text-shadow: 0px 0px 10px #00000078;
+    height: 100%;
+}
+
+.login-pf main {
+    /*background-color: #1f1231fa;*/
+    background-color: #1f123175;
+    /* background: linear-gradient(to top right, #010803a8, #09001dcf), linear-gradient(135deg, #00adff8c, #d21ccc00); */
+    background: linear-gradient(to top right, #076b2424, #110037a8), linear-gradient(135deg, #00adff8c, #d21ccc00);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    border-radius: 20px;
+    padding-top: 2em;
+}
+
+.pf-v5-c-login__container {
+    align-self: center;
+    margin: 1em;
+}
+
+
+/* -------------------------------- Set Logo -------------------------------- */
+.pf-v5-c-login__main-header {
+   background: url("../img/floodnet_logomark.png") no-repeat top center;
+   background-size: contain;
+   height: 12em;
+   margin-bottom: 1em;
+}
+.pf-v5-c-login__main-header * {display: none;}
+.login-pf .kc-logo-text {
+    display: none;
+}
+
+/* ------------------------ Recolor the form elements ----------------------- */
+.pf-v5-c-form-control {
+    background-color: #00000066;
+    border-radius: 3px;
+}
+.login-pf .pf-v5-c-button {
+    border-radius: 3px;
+}
+.login-pf .pf-v5-c-button {
+    background-color: #00000066;
+    color: white;
+}
+.login-pf .pf-v5-c-button.pf-m-primary,
+.login-pf .pf-v5-c-button.pf-m-control {
+    background-color: #000000;
+}
+
+.pf-v5-c-form__group .pf-v5-c-button,
+.pf-v5-c-form-control>:is(input,select,textarea),
+.pf-v5-c-check__label {
+    color: #fff;
+}
+
+.pf-v5-c-form-control::before, 
+.pf-v5-c-form-control::after,
+.pf-v5-c-button::before, 
+.pf-v5-c-button::after {
+    border-color: #000000a6;
+    border-bottom-color: #000000a6;
+    border-radius: 4px;
+}
+
+

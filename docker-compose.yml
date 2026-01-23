@@ -1,0 +1,23 @@
+version: '3.4'
+
+services:
+  postgresql:
+    image: docker.io/bitnami/postgresql:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - POSTGRESQL_USERNAME=bn_keycloak
+      - POSTGRESQL_DATABASE=bitnami_keycloak
+    volumes:
+      - ./data:/bitnami/postgresql
+
+  keycloak:
+    image: bitnami/keycloak
+    restart: always
+    ports:
+      - 8080:8080
+    volumes:
+      - ./floodnet:/opt/bitnami/keycloak/themes/floodnet
+    environment:
+      KEYCLOAK_ADMIN_USER: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_SPI_THEME_DEFAULT: floodnet

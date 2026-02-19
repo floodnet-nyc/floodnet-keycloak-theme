@@ -64,6 +64,7 @@
    background-size: contain;
    height: 12em;
    margin-bottom: 1em;
+   border-top: none;
 }
 .pf-v5-c-login__main-header * {display: none;}
 .login-pf .kc-logo-text {

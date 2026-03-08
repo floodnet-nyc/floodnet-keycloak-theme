@@ -1,0 +1,95 @@
+/* Welcome-page styling aligned with FloodNet login */
+html,
+body {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    background-color: #030005;
+    background:
+        linear-gradient(#1a405e59, #0034ffb0 90%),
+        linear-gradient(143deg, #ff6feb57 10.92%, #01042a75 52.1%),
+        url("../img/9thst.jpg") no-repeat center center fixed;
+    background-size: cover;
+    background-blend-mode: darken;
+    color: #e8f7ff;
+    font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
+}
+
+a {
+    color: #6affd3;
+}
+
+#welcome-container,
+.welcome,
+#kc-content,
+.card-pf,
+.container,
+main {
+    background:
+        linear-gradient(to top right, #076b2424, #110037a8),
+        linear-gradient(135deg, #00adff8c, #d21ccc00);
+    backdrop-filter: blur(6px);
+    border: 1px solid #65bfe85c;
+    border-radius: 14px;
+    box-shadow: 0 12px 30px #0000004d;
+    color: #e8f7ff;
+}
+
+#welcome-container,
+.welcome,
+.card-pf,
+main {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    padding: 1.2rem;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+label,
+li,
+dt,
+dd {
+    color: #e8f7ff;
+}
+
+input,
+select,
+textarea,
+.form-control,
+.pf-v5-c-form-control {
+    background-color: #00000080;
+    border: 1px solid #000000a6;
+    color: #e8f7ff;
+}
+
+button,
+.btn,
+.btn-primary,
+.pf-v5-c-button.pf-m-primary {
+    background-color: #000000cf;
+    border: 1px solid #000000;
+    color: #ffffff;
+    border-radius: 4px;
+}
+
+.btn:hover,
+.btn-primary:hover,
+.pf-v5-c-button.pf-m-primary:hover {
+    background-color: #000000;
+}
+
+.alert,
+.alert-info,
+.alert-warning,
+.alert-success,
+.alert-danger {
+    background: #11233fcc;
+    border: 1px solid #65bfe86b;
+    color: #e8f7ff;
+}

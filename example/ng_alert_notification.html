@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" style="margin:0;padding:0;">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<meta name="x-apple-disable-message-reformatting">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<title>FloodNet NYC Alert</title>
+<style>
+/* Dark mode (Apple Mail, some clients) */
+@media (prefers-color-scheme: dark) {
+  /* 0d131f */
+  .bg-body { background:#445370 !important;color:#e8edf7 !important; }
+  .card-container { background:#121a2b !important; }
+  .btn { color:#000000 !important; }
+  /* .muted    { color:#b8c3d9 !important; } */
+}
+@media screen and (max-width:600px){
+  .container { width:100% !important; }
+  .p-24 { padding-left: 0px !important; padding-right: 0px !important; }
+  .stack { display:block !important; width:100% !important; }
+  .center { text-align:center !important; }
+  .alert-card { border-radius: 0 !important; border-left-width: 0px !important; border-right-width: 0px !important; }
+}
+
+/* light */
+.bg-body {
+  background:#f3f6fb;
+  color:#0b1a3a;
+}
+.muted {
+  color:#8ea0bd;
+}
+.subtle-overlay {
+  background: rgba(116, 128, 255, 0.1);
+}
+
+.btn {
+  /* border: 2px solid transparent; */
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.btn:hover {
+  /* box-shadow: 0 0 30px rgba(0, 15, 255, 0.5) inset, 0 4px 15px rgba(30, 14, 235, 0.25) !important; */
+  box-shadow: 0 4px 15px rgba(30, 14, 235, 0.25) !important;
+  transform: scale(1.02) translateY(-1px);
+}
+</style>
+
+
+{{ define "email.pill" }}
+{{ if and .Value (not (hasPrefix "__" .Name)) }}
+<span style="
+  border:1px solid rgba(117, 117, 117, 0.21);border-radius:999px;
+  display:inline-block;
+  margin: 4px 6px 4px 0;
+  padding: 4px 10px;
+  font-size:11px;line-height:1.4;white-space:nowrap;">
+    {{- if hasPrefix "https://" .Value -}}<a href="{{ .Value }}" target="_blank" style="color: inherit; text-decoration: underline;">{{ .Name }}</a>
+    {{- else if hasPrefix "_" .Name -}}<b>{{ .Value }}</b>{{ else }}{{ .Name }}: <b>{{ .Value }}</b>{{- end -}}
+</span>
+{{ end }}
+{{ end }}
+
+{{ define "email.alert.card" }}
+<div class="subtle-overlay alert-card" style="
+      display:block;line-height:1.35;max-width:100%;
+      border:1px solid rgba(0, 62, 176, 0.07);
+      background: rgba(116, 128, 255, 0.1);
+      border-radius:10px;
+      margin: 8px auto;
+    ">
+    {{ with .ImageURL }}
+      <img alt src="{{ . }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;border-radius:10px 10px 0 0;" width="600" height="auto">
+    {{ end }}
+    {{ with .EmbeddedImage }}
+      <img alt src="cid:{{ . }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;border-radius:10px 10px 0 0;" width="600" height="auto">
+    {{ end }}
+  <div style="padding:10px 16px;">
+    {{ if .Annotations.title }}
+    <div style="font-weight:800;font-size:14px;">
+      <!-- BK - Halsey St & Tompkins Ave -->
+      {{ .Annotations.title }}
+    </div>
+        {{ if .Annotations.summary }}
+        <div class="muted" style="font-size:12px;margin-top:2px;color:#8ea0bd;">
+          <!-- Prospect Lefferts Gardens, Brooklyn -->
+          {{- .Annotations.summary -}}
+        </div>
+        {{ end }}
+    {{ else if .Annotations.summary }}
+    <div style="font-weight:800;font-size:14px;">
+      <!-- BK - Halsey St & Tompkins Ave -->
+      {{ .Annotations.summary }}
+    </div>
+    {{ end }}
+    {{ if .Annotations.description }}
+    <div class="muted" style="font-size:12px;margin-top:8px;color:#8ea0bd;">
+      <!-- Prospect Lefferts Gardens, Brooklyn -->
+      {{ .Annotations.description }}
+      <!-- <pre></pre> -->
+    </div>
+    {{ end }}
+    <div style="margin-top:2px;">
+    {{- range $k, $v := .Annotations -}}
+      {{- if and (ne $k "title") (ne $k "summary") (ne $k "description") (ne $k "DashboardVariables") (ne $k "DashboardUrl")  -}}
+        {{ template "email.pill" (dict "Name" $k "Value" $v) }}
+      {{- end -}}
+    {{- end -}}
+    {{- range $k, $v := .Values -}}
+      {{ template "email.pill" (dict "Name" $k "Value" (html $v)) }}
+    {{- end -}}
+    </div>
+  </div>
+  </div>
+{{ end }}
+
+</head>
+<body class="bg-body" style="
+    margin:0;padding:0;
+    background:#f3f6fb;
+    color:#0b1a3a;
+    font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    text-align: center;
+  ">
+  <table class="container" role="presentation" width="100%" cellspacing="0" cellpadding="0">
+    <tr>
+      <td align="center" style="padding:24px 16px;">
+        <table role="presentation" class="card-container" cellspacing="0" cellpadding="0" style="
+            width:100%;max-width:600px;
+            border-collapse:separate;
+            border-radius:16px;overflow:hidden;
+            background:#ffffff;
+            box-shadow: 0 -9px 15px rgba(6, 16, 168, 0.19) inset, 0 10px 30px rgba(2, 0, 60, 0.27);
+          " >
+          <!-- Header / Brand -->
+          <tr>
+            <td style="
+              padding:0;
+                text-align: center;
+                color: #fff;
+                text-shadow: 0 1px 5px rgba(0, 0, 0, 0.09);
+                backdrop-filter: blur(3px);
+                box-shadow: 0 0 40px rgba(2, 12, 144, 0.5) inset;
+                background-color: #54857d;
+                background-image: linear-gradient(45deg, #ffffff45, #00000033), linear-gradient(291deg, #46a8ff45, #bdcac733);
+                background-position: center;
+                background-size: cover; 
+            ">
+
+              <!-- Wave graphic -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding:20px 24px 0 24px;">
+                    <table role="presentation" width="100%">
+                      <tr>
+                        <td class="center" style="width:40px;">
+                          {{ block "email.header.logo" . }}
+                          <img src="https://static.wixstatic.com/media/a9a703_ff7c73779eb6430a896327bd6e958d93~mv2.png/v1/fill/w_192,h_192,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/floodnet_logo_mark.png" alt="FloodNet Logo" style="display:inline-block;border:0;outline:none;text-decoration:none;padding-bottom: 10px;">
+                          {{ end }}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="center" style="font-weight:700; font-size:18px; letter-spacing:.3px;">
+                          {{ block "email.header.name" . }}
+                          FloodNet NYC
+                          {{ end }}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 24px 12px 24px;">
+                    <div style="font-size:36px; line-height:1.2;">
+                      {{ block "email.header.title.pre" . }}{{ end }}
+                      {{ block "email.header.title" . }}
+                        {{ with .GroupLabels.alertname }}{{ . }}
+                        {{ else }}Alert
+                        {{ end }}
+                      {{ end }}
+                      {{ block "email.header.title.post" . }}{{ end }}
+                      </div>
+                      <!-- <div style="font-family: Inter, Helvetica, Arial; font-size: 13px; line-height: 150%;">
+                        <p style="margin-top: 0;">
+                          {{ with .GroupLabels.grafana_folder }}
+                            <b style="margin-top: 0">{{ . }}  &rsaquo; </b>
+                          {{ end }}
+                          {{ range .GroupLabels.SortedPairs }}{{ if not (has .Name (list "alertname" "grafana_folder" "instance")) -}}
+                            {{ .Name }}: {{ .Value }} {{ end }}{{ end }}</p>
+                      </div> -->
+
+                    <div class="muted" style="
+                        font-size:18px; margin-top:4px; 
+                        /* font-style: italic; */
+                        font-weight: 900;
+                        color:#e6f0ff; 
+                      ">
+                      {{ block "email.header.subtitle.pre" . }}{{ end }}
+                      {{ block "email.header.subtitle" . }}
+                      {{ $numberOfFiringInstance := (len .Alerts.Firing) }}
+                      {{ $numberOfResolvedAlerts := (len .Alerts.Resolved) }}
+                      {{ if $numberOfFiringInstance }}{{ $numberOfFiringInstance }} sensor{{ if gt $numberOfFiringInstance 1 }}s{{ end }} alerting{{ else }}No sensors alerting.{{ end }}
+                      <!-- 5 alerts active -->
+                      {{ end }}
+                      {{ block "email.header.subtitle.post" . }}{{ end }}
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top:12px;">
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top: 8px;"></td>
+          </tr>
+
+          {{ if .Message }}
+          <tr>
+            <td>
+                {{ __dangerouslyInjectHTML .Message }}
+            </td>
+          </tr>
+          {{ end }}
+
+          <!-- Footer -->
+          <tr>
+            <!-- rgba(164, 164, 164, 0.06) -->
+            <td class="subtle-overlay" style="
+                padding:16px 24px;
+                background: rgba(116, 128, 255, 0.1);
+              ">
+              <table role="presentation" width="100%">
+                <tr>
+                  <td>{{ block "email.footer.copyright.pre" . }}{{ end }}</td>
+                  <td class="center" style="font-size:12px;text-align: center;">
+                    {{ block "email.footer.copyright" . }}
+                    © <a href="https://www.floodnet.nyc" style="color: inherit;">FloodNet</a> • New York
+                    {{ end }}
+                  </td>
+                  <td>{{ block "email.footer.copyright.post" . }}{{ end }}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+
+        <!-- Logo chip -->
+        <table role="presentation" class="container" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;margin-top:12px;">
+        <tr>
+          <td align="center">
+            <span class="subtle-overlay" style="
+                display:inline-block;padding:6px 10px;
+                background: rgba(116, 128, 255, 0.1);
+                border:1px solid #90909047;border-radius:999px;
+                color:#8ea0bd;
+                font-size:11px;
+              ">
+              {{ block "email.footer.chip" . }}
+              🌧️ Real-time flood monitoring
+              {{ end }}
+            </span>
+          </td>
+        </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

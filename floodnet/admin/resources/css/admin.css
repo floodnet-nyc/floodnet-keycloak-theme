@@ -1,0 +1,79 @@
+/* Admin-console-specific tweaks on top of shared console.css */
+.pf-v5-c-page__header-brand .pf-v5-c-brand {
+    height: 3.4rem;
+    width: auto;
+}
+
+.pf-v5-c-data-list,
+.pf-v5-c-table {
+    --pf-v5-c-table--BackgroundColor: transparent;
+    --pf-v5-c-table--m-compact--BackgroundColor: transparent;
+}
+
+.pf-v5-c-page__main > .pf-v5-c-page__main-section {
+    padding: 1.2rem 1.5rem 1.8rem;
+}
+
+.pf-v5-c-page__main-tabs,
+.pf-v5-c-page__main-body {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+body[data-page-id="admin"] .pf-v5-c-page__main-body {
+    width: 100%;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding-bottom: 2rem;
+}
+
+body[data-page-id="admin"] .pf-v5-c-page__main-section {
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto 1.1rem;
+}
+
+.pf-v5-c-toolbar,
+.pf-v5-c-tabs,
+.pf-v5-c-table {
+    border-radius: 10px;
+}
+
+.pf-v5-c-page__main-body {
+    padding-bottom: 1.5rem;
+}
+
+.pf-v5-c-tabs {
+    margin-bottom: 0.85rem;
+}
+
+.pf-v5-c-toolbar {
+    margin-bottom: 0.85rem;
+    padding-block: 0.6rem;
+}
+
+.pf-v5-c-table th,
+.pf-v5-c-table td {
+    padding-top: 0.9rem;
+    padding-bottom: 0.9rem;
+}
+
+.pf-v5-c-pagination,
+.pf-v5-c-pagination__total-items,
+.pf-v5-c-pagination__nav {
+    color: #e8f7ff;
+}
+
+.pf-v5-c-pagination .pf-v5-c-menu-toggle,
+.pf-v5-c-pagination .pf-v5-c-button {
+    background: #091936cc;
+    border-color: #65bfe85c;
+}
+
+.pf-v5-c-table tr:hover {
+    background-color: #1d3e5b66;
+}
+
+.pf-v5-c-nav__section-title {
+    color: #b8d4e5;
+}

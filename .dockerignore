@@ -5,3 +5,4 @@ docker-compose.yml
 **/.DS_Store
 **/node_modules
 org.keycloak.*
+/example

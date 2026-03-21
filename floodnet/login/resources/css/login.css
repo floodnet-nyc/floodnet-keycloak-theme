@@ -46,6 +46,7 @@
     border-top: none;
 }
 
+.login-pf #kc-header,
 .pf-v5-c-login__main-header * {
     display: none;
 }

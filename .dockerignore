@@ -4,3 +4,4 @@ docker-compose.yml
 **/.git
 **/.DS_Store
 **/node_modules
+org.keycloak.*

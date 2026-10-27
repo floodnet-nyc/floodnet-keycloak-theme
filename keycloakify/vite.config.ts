@@ -8,7 +8,7 @@ export default defineConfig({
         react(),
         keycloakify({
             themeName: "floodnet",
-            accountThemeImplementation: "none",
+            accountThemeImplementation: "Single-Page",
             // Only build the jar we actually deploy (Keycloak 26 is in the
             // "all other versions" range). Set to `false` to skip a range.
             keycloakVersionTargets: {

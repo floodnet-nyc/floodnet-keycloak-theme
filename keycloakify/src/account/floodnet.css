@@ -1,0 +1,834 @@
+/*
+ * FloodNet account theme.
+ *
+ * A deliberately different character from the login page: warm paper, a
+ * floating ink navigation rail, mint accents and serif page headings — no
+ * flood photo, no glass. The Keycloak account UI is kept intact and re-skinned
+ * here, with a handful of owned components providing the page header/surface
+ * (components/page/Page.tsx) and the navigation rail (root/PageNav.tsx).
+ */
+
+:root {
+    /* Palette */
+    --fn-paper: #f4f1e9;
+    --fn-paper-deep: #ece7dc;
+    --fn-surface: #fffdf8;
+    --fn-ink: #0e2233;
+    --fn-ink-soft: #17324a;
+    --fn-muted: #5c6d77;
+    --fn-line: rgba(14, 34, 51, 0.12);
+    --fn-line-strong: rgba(14, 34, 51, 0.24);
+    --fn-teal: #0c7a68;
+    --fn-teal-deep: #07594c;
+    --fn-mint: #6affd3;
+    --fn-mint-soft: #d9f7ee;
+    --fn-coral: #b8503a;
+    --fn-coral-soft: #fbece7;
+
+    /* Type */
+    --fn-sans: "Avenir Next", "Avenir", "Segoe UI", "Trebuchet MS", sans-serif;
+    --fn-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+        "Times New Roman", serif;
+
+    /* PatternFly token remap */
+    --pf-v5-global--FontFamily--text: var(--fn-sans);
+    --pf-v5-global--FontFamily--heading: var(--fn-serif);
+    --pf-v5-global--primary-color--100: var(--fn-teal);
+    --pf-v5-global--primary-color--200: var(--fn-teal-deep);
+    --pf-v5-global--link--Color: var(--fn-teal);
+    --pf-v5-global--link--Color--hover: var(--fn-teal-deep);
+    --pf-v5-global--BorderRadius--sm: 0.5rem;
+    --pf-v5-global--BorderRadius--lg: 1.125rem;
+    --pf-v5-c-spinner--Color: var(--fn-teal);
+}
+
+html {
+    background-color: var(--fn-paper);
+    color-scheme: light;
+}
+
+/* The account UI toggles a dark class from the OS preference. This theme has a
+ * fixed light identity, so keep the page on the paper palette even then. */
+html.pf-v5-theme-dark {
+    color-scheme: light;
+}
+
+html body {
+    margin: 0;
+    font-family: var(--fn-sans);
+    color: var(--fn-ink);
+    background-color: var(--fn-paper);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Faint contour rings + mint wash, CSS-only (no background image). */
+html body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+        radial-gradient(58% 42% at 84% -8%, rgba(106, 255, 211, 0.22), rgba(106, 255, 211, 0) 62%),
+        radial-gradient(46% 40% at 2% 106%, rgba(12, 122, 104, 0.14), rgba(12, 122, 104, 0) 60%),
+        repeating-radial-gradient(
+            circle at 104% 116%,
+            rgba(14, 34, 51, 0) 0 44px,
+            rgba(14, 34, 51, 0.045) 44px 45px
+        );
+}
+
+#root {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+}
+
+html body a {
+    color: var(--fn-teal);
+    text-decoration: none;
+}
+
+html body a:hover {
+    color: var(--fn-teal-deep);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+html body :focus-visible {
+    outline: 2px solid rgba(12, 122, 104, 0.65);
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- masthead */
+
+html body .pf-v5-c-masthead {
+    --pf-v5-c-masthead--BackgroundColor: transparent;
+    position: relative;
+    z-index: 20;
+    min-height: 72px;
+    padding: 0 30px;
+    background: rgba(244, 241, 233, 0.78);
+    border-bottom: 1px solid var(--fn-line);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+
+html body .pf-v5-c-masthead__toggle .pf-v5-c-button {
+    --pf-v5-c-button--m-plain--Color: var(--fn-ink);
+    color: var(--fn-ink);
+}
+
+html body .pf-v5-c-masthead__brand {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 12px;
+    width: auto;
+    text-decoration: none;
+}
+
+html body .pf-v5-c-masthead__brand img {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+}
+
+html body .pf-v5-c-masthead__brand::after {
+    content: "FloodNet";
+    font-family: var(--fn-sans);
+    font-size: 1.12rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--fn-ink);
+    line-height: 1;
+}
+
+html body .pf-v5-c-masthead .pf-v5-c-toolbar {
+    --pf-v5-c-toolbar--BackgroundColor: transparent;
+    padding-right: 0;
+}
+
+html body .pf-v5-c-masthead .pf-v5-c-menu-toggle:not(.pf-m-plain) {
+    min-height: 38px;
+    padding: 5px 16px;
+    font-family: var(--fn-sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--fn-ink);
+    background-color: var(--fn-surface);
+    border: 1px solid var(--fn-line);
+    border-radius: 999px;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+html body .pf-v5-c-masthead .pf-v5-c-menu-toggle:not(.pf-m-plain):hover {
+    border-color: var(--fn-line-strong);
+    box-shadow: 0 3px 10px rgba(14, 34, 51, 0.08);
+}
+
+html body .pf-v5-c-masthead .pf-v5-c-menu-toggle.pf-m-plain {
+    --pf-v5-c-menu-toggle--m-plain--Color: var(--fn-ink);
+    padding: 6px 10px;
+    color: var(--fn-ink);
+    background: transparent;
+    border: 0;
+}
+
+html body .pf-v5-c-masthead .pf-v5-c-avatar {
+    width: 38px;
+    height: 38px;
+    background-color: var(--fn-mint-soft);
+    border: 1px solid rgba(12, 122, 104, 0.18);
+    color: var(--fn-teal-deep);
+}
+
+html body .pf-v5-c-masthead .pf-v5-c-button.pf-m-link {
+    font-size: 0.82rem;
+    color: var(--fn-muted);
+}
+
+/* ------------------------------------------------------------------- page */
+
+html body .pf-v5-c-page {
+    --pf-v5-c-page--BackgroundColor: transparent;
+    background-color: transparent;
+}
+
+html body .pf-v5-c-page__sidebar {
+    --pf-v5-c-page__sidebar--BackgroundColor: transparent;
+    padding: 24px 20px 28px 30px;
+    background: transparent;
+    overflow: visible;
+}
+
+html body .pf-v5-c-page__sidebar-body {
+    background-color: var(--fn-ink);
+    border-radius: 26px;
+    padding: 22px 14px 18px;
+    box-shadow: 0 40px 80px -52px rgba(9, 22, 32, 0.65);
+    overflow-y: auto;
+    height: 100%;
+}
+
+html body .pf-v5-c-page__main {
+    align-items: stretch;
+    padding: 34px 42px 72px;
+    background: transparent;
+}
+
+html body .pf-v5-c-page__main > .fn-page {
+    width: 100%;
+}
+
+@media (min-width: 1400px) {
+    html body .pf-v5-c-page__main {
+        padding: 40px 64px 84px;
+    }
+}
+
+/* -------------------------------------------------------------------- nav */
+
+.fn-nav {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.fn-nav__label {
+    margin: 0 0 14px 12px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(226, 240, 252, 0.46);
+}
+
+.fn-nav__list,
+.fn-nav__sublist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.fn-nav__link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    color: #cbdbe6;
+    font-family: var(--fn-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.3;
+    text-decoration: none;
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.fn-nav__link:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.07);
+    text-decoration: none;
+}
+
+.fn-nav__link--active,
+.fn-nav__link--active:hover {
+    color: #06211a;
+    background-color: var(--fn-mint);
+    font-weight: 600;
+}
+
+.fn-nav__icon {
+    display: flex;
+    flex: 0 0 17px;
+    width: 17px;
+    height: 17px;
+    opacity: 0.92;
+}
+
+.fn-nav__icon svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+}
+
+.fn-nav__dot {
+    flex: 0 0 5px;
+    width: 5px;
+    height: 5px;
+    margin: 0 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+    opacity: 0.5;
+}
+
+.fn-nav__group {
+    margin-top: 12px;
+}
+
+.fn-nav__group-label {
+    margin: 0 0 6px 12px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(226, 240, 252, 0.42);
+}
+
+.fn-nav__sublist .fn-nav__link {
+    padding: 8px 12px 8px 10px;
+    font-size: 0.84rem;
+    color: #a8c0cf;
+}
+
+.fn-nav__sublist .fn-nav__link--active,
+.fn-nav__sublist .fn-nav__link--active:hover {
+    color: var(--fn-mint);
+    background-color: rgba(106, 255, 211, 0.12);
+}
+
+.fn-nav__footer {
+    margin: auto 0 0;
+    padding: 16px 12px 2px;
+    font-size: 0.66rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(226, 240, 252, 0.4);
+}
+
+.fn-nav__footer span {
+    color: var(--fn-mint);
+}
+
+/* ------------------------------------------------------------- page header */
+
+.fn-page {
+    max-width: 1120px;
+    margin: 0 auto;
+}
+
+.fn-page__head {
+    margin-bottom: 26px;
+}
+
+.fn-eyebrow {
+    margin: 0 0 10px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fn-teal);
+}
+
+.fn-page__title {
+    margin: 0 0 10px;
+    font-family: var(--fn-serif);
+    font-size: clamp(2.1rem, 3.4vw, 2.9rem);
+    font-weight: 500;
+    line-height: 1.04;
+    letter-spacing: -0.022em;
+    color: var(--fn-ink);
+}
+
+.fn-page__description {
+    max-width: 62ch;
+    margin: 0;
+    font-size: 0.98rem;
+    line-height: 1.55;
+    color: var(--fn-muted);
+}
+
+.fn-page__surface {
+    padding: 30px 32px 32px;
+    background-color: var(--fn-surface);
+    border: 1px solid var(--fn-line);
+    border-radius: 22px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 34px 70px -52px rgba(14, 34, 51, 0.45);
+}
+
+/* ---------------------------------------------------------------- titles */
+
+html body .fn-page__surface .pf-v5-c-title,
+html body .fn-page__surface h2,
+html body .fn-page__surface h3 {
+    font-family: var(--fn-serif);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--fn-ink);
+}
+
+html body .fn-page__surface .pf-v5-c-title {
+    font-size: 1.45rem;
+    margin-bottom: 0.9rem;
+}
+
+html body .fn-page__surface h1.pf-v5-c-title {
+    font-size: 1.55rem;
+}
+
+html body .fn-page__surface h2.pf-v5-c-title {
+    font-size: 1.28rem;
+}
+
+html body .fn-page__surface h3.pf-v5-c-title {
+    font-size: 1.08rem;
+}
+
+html body .fn-page__surface .pf-v5-c-content {
+    color: var(--fn-muted);
+}
+
+html body .fn-page__surface .pf-v5-c-page__main-section {
+    padding: 0;
+    background: transparent;
+}
+
+html body .fn-page__surface .pf-v5-c-toolbar__content-section {
+    align-items: center;
+    gap: 12px;
+}
+
+html body .fn-page__surface .pf-v5-c-toolbar__item {
+    gap: 8px;
+}
+
+html body .fn-page__surface .pf-v5-c-page__main-section + .pf-v5-c-page__main-section {
+    padding-top: 1.5rem;
+}
+
+/* ------------------------------------------------------------------ form */
+
+html body .fn-page__surface .pf-v5-c-form__group {
+    margin-bottom: 18px;
+}
+
+html body .fn-page__surface .pf-v5-c-form__group-label {
+    text-align: left;
+}
+
+html body .fn-page__surface .pf-v5-c-form__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--fn-muted);
+    text-align: left;
+}
+
+html body .fn-page__surface .pf-v5-c-form__label-required {
+    margin-left: 0.2rem;
+    color: var(--fn-coral);
+    font-weight: 600;
+}
+
+html body .pf-v5-c-form-control {
+    min-height: 44px;
+    font-family: var(--fn-sans);
+    font-size: 0.95rem;
+    color: var(--fn-ink);
+    background-color: #ffffff;
+    border: 1px solid var(--fn-line-strong);
+    border-bottom-color: var(--fn-line-strong);
+    border-radius: 10px;
+    box-shadow: none;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+html body .pf-v5-c-form-control:hover {
+    border-color: rgba(14, 34, 51, 0.34);
+}
+
+html body .pf-v5-c-form-control:focus,
+html body .pf-v5-c-form-control.pf-m-focus {
+    outline: none;
+    border-color: var(--fn-teal);
+    box-shadow: 0 0 0 3px rgba(12, 122, 104, 0.14);
+}
+
+html body .pf-v5-c-form-control::placeholder {
+    color: rgba(92, 109, 119, 0.7);
+}
+
+html body .pf-v5-c-form-control[aria-invalid="true"] {
+    border-color: var(--fn-coral);
+    box-shadow: 0 0 0 3px rgba(184, 80, 58, 0.12);
+}
+
+html body .pf-v5-c-check__input,
+html body .pf-v5-c-radio__input {
+    accent-color: var(--fn-teal);
+}
+
+html body .pf-v5-c-form__helper-text,
+html body .pf-v5-c-helper-text__item-text {
+    color: var(--fn-muted);
+}
+
+/* --------------------------------------------------------------- buttons */
+
+/* PatternFly paints a 1px focus frame with `::after`; the theme uses its own
+ * focus treatment. */
+html body .pf-v5-c-button::after {
+    border: 0;
+}
+
+html body .pf-v5-c-button {
+    border-radius: 10px;
+    font-family: var(--fn-sans);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        transform 0.15s ease;
+}
+
+html body .pf-v5-c-button.pf-m-primary {
+    color: #ffffff;
+    background-color: var(--fn-teal);
+    border: 1px solid var(--fn-teal);
+    box-shadow: none;
+}
+
+html body .pf-v5-c-button.pf-m-primary:hover {
+    background-color: var(--fn-teal-deep);
+    border-color: var(--fn-teal-deep);
+}
+
+html body .pf-v5-c-button.pf-m-primary:active {
+    transform: translateY(1px);
+}
+
+html body .pf-v5-c-button.pf-m-secondary {
+    color: var(--fn-ink);
+    background-color: var(--fn-surface);
+    border: 1px solid var(--fn-line-strong);
+}
+
+html body .pf-v5-c-button.pf-m-secondary:hover {
+    background-color: var(--fn-paper);
+}
+
+html body .pf-v5-c-button.pf-m-link {
+    padding: 0;
+    color: var(--fn-teal);
+}
+
+html body .pf-v5-c-button.pf-m-link:hover {
+    color: var(--fn-teal-deep);
+}
+
+html body .pf-v5-c-button.pf-m-danger {
+    background-color: var(--fn-coral);
+    border-color: var(--fn-coral);
+}
+
+html body .pf-v5-c-button.pf-m-danger:hover {
+    background-color: #9c422f;
+    border-color: #9c422f;
+}
+
+html body .pf-v5-c-button.pf-m-control {
+    background-color: var(--fn-surface);
+    border-color: var(--fn-line-strong);
+    color: var(--fn-ink);
+}
+
+/* --------------------------------------------------------------- surfaces */
+
+html body .fn-page__surface .pf-v5-c-card {
+    background-color: var(--fn-surface);
+    border: 1px solid var(--fn-line);
+    border-radius: 16px;
+    box-shadow: none;
+}
+
+html body .pf-v5-c-page__main-section.pf-m-light {
+    background-color: transparent;
+}
+
+/* Lists used by account security and applications. */
+html body .fn-page__surface .pf-v5-c-data-list {
+    border: 0;
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__item {
+    background-color: transparent;
+    border-bottom: 1px solid var(--fn-line);
+    box-shadow: none;
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__item:last-child {
+    border-bottom: 0;
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__item-row,
+html body .fn-page__surface .pf-v5-c-data-list__item-content,
+html body .fn-page__surface .pf-v5-c-data-list__item {
+    background-color: transparent;
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__item-row {
+    padding: 16px 0;
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__cell {
+    padding-top: 0;
+    padding-bottom: 0;
+    color: var(--fn-ink);
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__item.pf-m-expanded {
+    background-color: var(--fn-paper);
+    border-radius: 14px;
+}
+
+html body .pf-v5-c-description-list__term {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fn-muted);
+}
+
+html body .pf-v5-c-description-list__description {
+    color: var(--fn-ink);
+}
+
+html body .pf-v5-c-expandable-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--fn-line);
+}
+
+html body .pf-v5-c-expandable-section__toggle {
+    font-family: var(--fn-sans);
+    font-weight: 600;
+    color: var(--fn-muted);
+}
+
+/* Jump-to-section rail on personal info. */
+html body .fn-page__surface .pf-v5-c-jump-links {
+    position: sticky;
+    top: 24px;
+    padding: 18px 18px 14px;
+    background-color: var(--fn-paper);
+    border: 1px solid var(--fn-line);
+    border-radius: 16px;
+}
+
+html body .fn-page__surface .pf-v5-c-jump-links__label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fn-muted);
+}
+
+html body .fn-page__surface .pf-v5-c-jump-links__link {
+    font-size: 0.88rem;
+    color: var(--fn-muted);
+}
+
+html body .fn-page__surface .pf-v5-c-jump-links__link.pf-m-current {
+    color: var(--fn-teal);
+    font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- alerts */
+
+html body .pf-v5-c-alert {
+    border: 1px solid var(--fn-line);
+    border-radius: 12px;
+    background-color: var(--fn-paper-deep);
+    color: var(--fn-ink);
+}
+
+html body .pf-v5-c-alert.pf-m-danger {
+    background-color: var(--fn-coral-soft);
+    border-color: #efc9bc;
+}
+
+html body .pf-v5-c-alert.pf-m-success {
+    background-color: var(--fn-mint-soft);
+    border-color: #b9e8dc;
+}
+
+html body .pf-v5-c-alert.pf-m-warning {
+    background-color: #faf1dd;
+    border-color: #ecd9ac;
+}
+
+html body .pf-v5-c-alert.pf-m-info {
+    background-color: #eef3f8;
+    border-color: #cfdde9;
+}
+
+html body .pf-v5-c-alert__title {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* --------------------------------------------------------- menus / modals */
+
+html body .pf-v5-c-menu {
+    padding: 6px;
+    background-color: var(--fn-surface);
+    border: 1px solid var(--fn-line);
+    border-radius: 14px;
+    box-shadow: 0 26px 60px -28px rgba(14, 34, 51, 0.4);
+}
+
+html body .pf-v5-c-menu__item {
+    border-radius: 9px;
+    color: var(--fn-ink);
+    font-family: var(--fn-sans);
+}
+
+html body .pf-v5-c-menu__item:hover {
+    background-color: var(--fn-paper);
+}
+
+html body .pf-v5-c-modal-box {
+    background-color: var(--fn-surface);
+    border-radius: 20px;
+    box-shadow: 0 44px 100px -40px rgba(14, 34, 51, 0.5);
+}
+
+html body .pf-v5-c-modal-box__title {
+    font-family: var(--fn-serif);
+    font-weight: 600;
+}
+
+html body .pf-v5-c-backdrop {
+    background-color: rgba(14, 34, 51, 0.55);
+}
+
+/* ---------------------------------------------------------------- mobile */
+
+@media (max-width: 1199px) {
+    /* With the form stacked, the jump rail is just noise above the fields. */
+    html body .fn-page__surface .pf-v5-c-page__main-section:has(.pf-v5-c-jump-links) {
+        display: none;
+    }
+
+    html body .pf-v5-c-masthead {
+        grid-template-columns: auto auto 1fr;
+        grid-template-rows: auto;
+        min-height: 64px;
+        height: auto;
+        padding: 0 18px;
+    }
+
+    html body .pf-v5-c-masthead__content {
+        grid-column: 3;
+        grid-row: 1;
+    }
+
+    html body .pf-v5-c-masthead__content .pf-v5-c-toolbar__content-section {
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    html body .pf-v5-c-masthead__brand {
+        width: max-content;
+        max-width: max-content;
+        justify-self: start;
+    }
+
+    /* The sidebar becomes an off-canvas drawer, so paint the drawer itself. */
+    html body .pf-v5-c-page__sidebar {
+        padding: 16px;
+        background-color: var(--fn-ink);
+    }
+
+    html body .pf-v5-c-page__sidebar-body {
+        padding: 8px;
+        background-color: transparent;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    html body .pf-v5-c-page__main {
+        padding: 24px 20px 56px;
+    }
+}
+
+@media (max-width: 767px) {
+    html body .pf-v5-c-masthead__brand::after {
+        font-size: 1rem;
+    }
+
+    html body .fn-page__title {
+        font-size: 2rem;
+    }
+
+    .fn-page__surface {
+        padding: 22px 18px 24px;
+        border-radius: 18px;
+    }
+
+    html body .fn-page__surface .pf-v5-c-form__group {
+        margin-bottom: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html body *,
+    html body *::before,
+    html body *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}

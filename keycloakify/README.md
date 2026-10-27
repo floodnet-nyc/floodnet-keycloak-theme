@@ -56,18 +56,31 @@ npm run build-keycloak-theme
 
 ## Deploy
 
-Mount the jar into Keycloak and select the `floodnet` theme:
+Mount the jar into Keycloak, then select `floodnet` as the **realm's login
+theme** (Realm settings → Themes → Login theme, or
+`kcadm.sh update realms/<realm> -s loginTheme=floodnet`).
 
 ```yaml
 volumes:
   - ./keycloakify/dist_keycloak/floodnet-keycloak-theme.jar:/opt/keycloak/providers/floodnet-theme.jar
-environment:
-  KC_SPI_THEME_DEFAULT: floodnet
 ```
+
+Do **not** set `KC_SPI_THEME_DEFAULT=floodnet` for this theme: it only ships the
+login type, so Keycloak would also try to resolve the account/admin theme from
+it and fail with a 500.
+
+## Design notes
+
+The card deliberately copies the classic theme's glass recipe rather than
+layering a new "card" on top: no border, no hairline, no box shadow, the same
+two translucent gradients (`#076b24` → `#110037`, `#00adff` → transparent) and
+`backdrop-filter: blur(6px)` over the flood photo. The logomark lives inside the
+glass. Polish is limited to typography rhythm, responsive sizing, focus states
+and consistent controls.
 
 ## Notes / next steps
 
-- The CSS is intentionally one file (~700 lines including comments). It
+- The CSS is intentionally one file (~650 lines including comments). It
   overrides Keycloakify's default stylesheet rather than replacing it.
 - Account console (`accountThemeImplementation`), admin console and email
   themes are not ported yet. Keycloakify can generate all three, but the

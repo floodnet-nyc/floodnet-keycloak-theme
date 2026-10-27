@@ -5,26 +5,27 @@
  * one stylesheet, no ejected React pages. Every page (sign-in, register, OTP,
  * password reset, WebAuthn, errors) inherits the same look.
  *
+ * The card follows the classic theme's recipe exactly: no border, no shadow,
+ * a ~50% translucent purple/cyan gradient and a 6px backdrop blur over the
+ * flood photo. Restraint first — the photo and the colour wash are the design.
+ *
  * Overrides are prefixed with `body.kcBodyClass` so they reliably beat the
  * default stylesheet Keycloakify loads from the theme resources.
  */
 
 :root {
-    --fn-bg: #04070f;
-    --fn-text: #eaf6ff;
-    --fn-muted: rgba(210, 232, 248, 0.72);
+    --fn-bg: #030005;
+    --fn-text: #e8f4ff;
+    --fn-muted: rgba(226, 240, 252, 0.7);
     --fn-accent: #6affd3;
-    --fn-accent-deep: #38d7c0;
-    --fn-cyan: #65bfe8;
-    --fn-border: rgba(101, 191, 232, 0.26);
-    --fn-border-strong: rgba(101, 191, 232, 0.45);
-    --fn-field: rgba(2, 10, 22, 0.82);
-    --fn-radius: 20px;
-    --fn-font: "Avenir Next", "Avenir", "Inter", "Segoe UI", "Helvetica Neue",
-        Arial, sans-serif;
+    --fn-border: rgba(255, 255, 255, 0.1);
+    --fn-border-strong: rgba(255, 255, 255, 0.2);
+    --fn-field: rgba(0, 0, 0, 0.38);
+    --fn-font: "Avenir Next", "Avenir", "Segoe UI", "Trebuchet MS", sans-serif;
 }
 
 html {
+    background-color: var(--fn-bg);
     color-scheme: dark;
 }
 
@@ -35,50 +36,24 @@ body.kcBodyClass {
     margin: 0;
     font-family: var(--fn-font);
     color: var(--fn-text);
-    background-color: var(--fn-bg);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.35);
+    /* Same layers as the classic theme; the photo shows through. */
+    background-color: transparent;
     background-image:
-        radial-gradient(
-            90% 70% at 50% 6%,
-            rgba(26, 64, 94, 0.35) 0%,
-            rgba(3, 7, 18, 0) 62%
-        ),
-        linear-gradient(
-            180deg,
-            rgba(3, 5, 12, 0.3) 0%,
-            rgba(2, 8, 24, 0.42) 42%,
-            rgba(0, 10, 34, 0.78) 100%
-        ),
-        linear-gradient(
-            143deg,
-            rgba(255, 111, 235, 0.18) 10%,
-            rgba(1, 4, 42, 0.35) 52%
-        ),
+        linear-gradient(rgba(26, 64, 94, 0.35), rgba(0, 52, 255, 0.69) 90%),
+        linear-gradient(143deg, rgba(255, 111, 235, 0.34) 10.92%, rgba(1, 4, 42, 0.46) 52.1%),
         url("./assets/9thst.jpg");
-    background-position: center, center, center, center;
-    background-size: cover, cover, cover, cover;
+    background-position: center, center, center;
+    background-size: cover, cover, cover;
     background-repeat: no-repeat;
-    background-attachment: fixed, fixed, fixed, fixed;
+    background-attachment: fixed, fixed, fixed;
+    background-blend-mode: darken, darken, normal;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
 }
 
-/* Soft vignette, purely decorative. */
-body.kcBodyClass::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background: radial-gradient(
-        82% 72% at 50% 34%,
-        rgba(0, 0, 0, 0) 32%,
-        rgba(2, 5, 12, 0.55) 100%
-    );
-}
-
 body.kcBodyClass .login-pf-page {
     position: relative;
-    z-index: 1;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -91,69 +66,42 @@ body.kcBodyClass .login-pf-page {
 
 /* ----------------------------------------------------------------- brand */
 
+/* The classic theme puts the logomark inside the glass card. Hiding the
+ * Keycloakify header and drawing the logo on the card keeps that composition. */
 body.kcBodyClass #kc-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
-    margin: 0 auto 1.4rem;
-    padding: 0;
-    background: none;
-}
-
-body.kcBodyClass #kc-header-wrapper {
-    width: 92px;
-    height: 92px;
-    background: url("./assets/floodnet-logomark.png") center / contain no-repeat;
-    filter: drop-shadow(0 10px 30px rgba(106, 255, 211, 0.22));
-}
-
-/* The realm name is redundant next to the logo. */
-body.kcBodyClass #kc-header-wrapper > span {
     display: none;
 }
 
 /* ------------------------------------------------------------------ card */
 
 body.kcBodyClass .card-pf {
-    position: relative;
     box-sizing: border-box;
-    width: min(27rem, calc(100vw - 2rem));
+    width: min(32rem, calc(100vw - 2rem));
     max-width: 100%;
     margin: 0;
-    padding: 2.1rem 2.25rem 2rem;
+    padding: 2.1rem 2.5rem 2.1rem;
     color: var(--fn-text);
-    background-image: linear-gradient(
-        158deg,
-        rgba(21, 57, 92, 0.72) 0%,
-        rgba(9, 24, 46, 0.78) 55%,
-        rgba(5, 14, 28, 0.84) 100%
-    );
-    background-color: rgba(8, 22, 43, 0.7);
-    border: 1px solid var(--fn-border);
-    border-radius: var(--fn-radius);
-    box-shadow:
-        0 30px 70px rgba(0, 0, 0, 0.55),
-        0 0 0 1px rgba(0, 0, 0, 0.18),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(18px) saturate(135%);
-    -webkit-backdrop-filter: blur(18px) saturate(135%);
+    /* Same recipe as the classic theme's `main`: no extra backdrop colour,
+     * just the two translucent gradients over the blurred photo. */
+    background-color: transparent;
+    background-image:
+        linear-gradient(to top right, rgba(7, 107, 36, 0.14), rgba(17, 0, 55, 0.66)),
+        linear-gradient(135deg, rgba(0, 173, 255, 0.55), rgba(210, 28, 204, 0));
+    border: 0;
+    border-radius: 20px;
+    box-shadow: none;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
-/* Hairline highlight along the top edge of the glass. */
 body.kcBodyClass .card-pf::before {
     content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    height: 1px;
-    background: linear-gradient(
-        90deg,
-        rgba(106, 255, 211, 0) 0%,
-        rgba(106, 255, 211, 0.45) 50%,
-        rgba(101, 191, 232, 0) 100%
-    );
+    display: block;
+    width: 112px;
+    height: 112px;
+    margin: 0 auto 1.25rem;
+    background: url("./assets/floodnet-logomark.png") center / contain no-repeat;
+    filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.3));
     pointer-events: none;
 }
 
@@ -182,88 +130,47 @@ body.kcBodyClass .card-pf .login-pf-header .kcContentWrapperClass > div {
 /* ---------------------------------------------------------------- titles */
 
 body.kcBodyClass #kc-page-title {
-    margin: 0 0 1.5rem;
+    margin: 0 0 1.15rem;
     padding: 0;
-    font-size: 1.45rem;
+    font-size: 1.4rem;
     font-weight: 600;
     line-height: 1.25;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.005em;
     text-align: left;
-    color: #f6fbff;
+    color: #f2faff;
 }
 
 body.kcBodyClass .subtitle {
-    margin: 0 0 1.25rem;
-    font-size: 0.78rem;
-    letter-spacing: 0.04em;
+    margin: 0 0 1rem;
+    font-size: 0.75rem;
+    letter-spacing: 0;
     color: var(--fn-muted);
 }
 
 body.kcBodyClass .subtitle .required,
 body.kcBodyClass .required {
-    color: var(--fn-accent);
+    color: rgba(255, 157, 157, 0.9);
 }
 
-/* ---------------------------------------------------------------- locale */
-
-/* Sits above the title, in the card's top padding. */
+/* The classic theme hid the language switcher; keep that behaviour. */
 body.kcBodyClass #kc-locale {
-    position: absolute;
-    top: -2.35rem;
-    right: -0.5rem;
-    float: none;
-    margin: 0;
-}
-
-body.kcBodyClass #kc-current-locale-link {
-    padding: 0.3rem 0.55rem;
-    font-size: 0.78rem;
-    color: var(--fn-muted);
-    background: transparent;
-    border: 0;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-body.kcBodyClass #kc-current-locale-link:hover {
-    color: var(--fn-text);
-    background: rgba(255, 255, 255, 0.07);
-}
-
-body.kcBodyClass #kc-locale ul {
-    min-width: 9rem;
-    padding: 0.35rem;
-    background: #0a1a2e;
-    border: 1px solid var(--fn-border);
-    border-radius: 10px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
-}
-
-body.kcBodyClass #kc-locale ul a {
-    padding: 0.4rem 0.6rem;
-    color: var(--fn-text);
-    border-radius: 7px;
-}
-
-body.kcBodyClass #kc-locale ul a:hover {
-    background: rgba(106, 255, 211, 0.12);
-    text-decoration: none;
+    display: none;
 }
 
 /* ------------------------------------------------------------------ form */
 
 body.kcBodyClass .form-group {
-    margin-bottom: 1.05rem;
+    margin-bottom: 1rem;
 }
 
 body.kcBodyClass .form-group > label,
 body.kcBodyClass .kcLabelWrapperClass label {
     display: block;
     margin-bottom: 0.4rem;
-    font-size: 0.76rem;
+    font-size: 0.84rem;
     font-weight: 600;
-    letter-spacing: 0.075em;
-    text-transform: uppercase;
+    letter-spacing: 0;
+    text-transform: none;
     color: var(--fn-muted);
 }
 
@@ -275,7 +182,7 @@ body.kcBodyClass .pf-c-form__label {
 body.kcBodyClass .pf-c-form-control {
     box-sizing: border-box;
     width: 100%;
-    height: 2.9rem;
+    height: 2.8rem;
     padding: 0.55rem 0.85rem;
     font-family: inherit;
     font-size: 0.95rem;
@@ -284,7 +191,7 @@ body.kcBodyClass .pf-c-form-control {
     background-color: var(--fn-field);
     border: 1px solid var(--fn-border);
     border-bottom: 1px solid var(--fn-border);
-    border-radius: 10px;
+    border-radius: 8px;
     box-shadow: none;
     transition:
         border-color 0.16s ease,
@@ -293,7 +200,7 @@ body.kcBodyClass .pf-c-form-control {
 }
 
 body.kcBodyClass .pf-c-form-control::placeholder {
-    color: rgba(210, 232, 248, 0.35);
+    color: rgba(226, 240, 252, 0.3);
 }
 
 body.kcBodyClass .pf-c-form-control:hover {
@@ -302,21 +209,20 @@ body.kcBodyClass .pf-c-form-control:hover {
 
 body.kcBodyClass .pf-c-form-control:focus {
     outline: none;
-    background-color: rgba(3, 12, 26, 0.82);
-    border-color: var(--fn-accent);
-    box-shadow: 0 0 0 3px rgba(106, 255, 211, 0.16);
+    background-color: rgba(0, 0, 0, 0.48);
+    border-color: rgba(106, 255, 211, 0.55);
+    box-shadow: 0 0 0 2px rgba(106, 255, 211, 0.12);
 }
 
-body.kcBodyClass .pf-m-error,
 body.kcBodyClass .pf-c-form-control[aria-invalid="true"] {
-    border-color: #ff7b7b;
+    border-color: rgba(255, 123, 123, 0.75);
 }
 
 body.kcBodyClass input:-webkit-autofill,
 body.kcBodyClass input:-webkit-autofill:hover,
 body.kcBodyClass input:-webkit-autofill:focus {
     -webkit-text-fill-color: var(--fn-text);
-    -webkit-box-shadow: 0 0 0 1000px #071528 inset;
+    -webkit-box-shadow: 0 0 0 1000px #061225 inset;
     caret-color: var(--fn-accent);
 }
 
@@ -339,26 +245,22 @@ body.kcBodyClass .pf-c-input-group .pf-c-form-control {
 
 body.kcBodyClass .pf-c-input-group .pf-c-button.pf-m-control {
     flex: 0 0 auto;
-    width: 2.9rem;
+    width: 2.8rem;
     padding: 0;
     color: var(--fn-muted);
     background-color: var(--fn-field);
     border: 1px solid var(--fn-border);
-    border-left: 1px solid rgba(101, 191, 232, 0.14);
-    border-radius: 0 10px 10px 0;
+    border-left: 0;
+    border-radius: 0 8px 8px 0;
 }
 
 body.kcBodyClass .pf-c-input-group .pf-c-button.pf-m-control:hover {
     color: var(--fn-text);
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 body.kcBodyClass .pf-c-input-group:focus-within .pf-c-button.pf-m-control {
-    border-color: var(--fn-accent);
-}
-
-body.kcBodyClass .pf-c-input-group .pf-c-form-control:focus {
-    border-right: 0;
+    border-color: rgba(106, 255, 211, 0.55);
 }
 
 /* Remember me + forgot password row. */
@@ -367,7 +269,7 @@ body.kcBodyClass .login-pf-settings {
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    margin: 0.1rem 0 1.35rem;
+    margin: 0.1rem 0 1.25rem;
 }
 
 body.kcBodyClass .checkbox {
@@ -380,9 +282,9 @@ body.kcBodyClass .checkbox label {
     position: relative;
     display: inline-flex;
     align-items: center;
-    padding-left: 1.6rem;
+    padding-left: 1.55rem;
     margin: 0;
-    font-size: 0.85rem;
+    font-size: 0.84rem;
     font-weight: 500;
     letter-spacing: 0;
     text-transform: none;
@@ -394,28 +296,25 @@ body.kcBodyClass input[type="checkbox"] {
     position: absolute;
     top: 50%;
     left: 0;
-    width: 1.05rem;
-    height: 1.05rem;
+    width: 1rem;
+    height: 1rem;
     margin: 0;
     transform: translateY(-50%);
     appearance: none;
     -webkit-appearance: none;
     background-color: var(--fn-field);
-    border: 1px solid var(--fn-border-strong);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 4px;
     cursor: pointer;
-    transition:
-        background-color 0.15s ease,
-        border-color 0.15s ease;
 }
 
 body.kcBodyClass input[type="checkbox"]:checked {
-    background-color: var(--fn-accent-deep);
+    background-color: var(--fn-accent);
     border-color: var(--fn-accent);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 10'%3E%3Cpath d='M1 5.3 4.2 8.5 11 1.5' fill='none' stroke='%2304161c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 10'%3E%3Cpath d='M1 5.3 4.2 8.5 11 1.5' fill='none' stroke='%23062119' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 0.7rem;
+    background-size: 0.65rem;
 }
 
 body.kcBodyClass .pf-c-form__helper-text,
@@ -429,13 +328,11 @@ body.kcBodyClass .kc-feedback-text {
 
 body.kcBodyClass .pf-c-button {
     font-family: inherit;
-    border-radius: 10px;
+    border-radius: 8px;
     transition:
-        transform 0.16s ease,
-        box-shadow 0.16s ease,
         background-color 0.16s ease,
         border-color 0.16s ease,
-        filter 0.16s ease;
+        color 0.16s ease;
 }
 
 /* PatternFly draws a light 1px frame with this pseudo-element. */
@@ -443,49 +340,37 @@ body.kcBodyClass .pf-c-button::after {
     border: 0;
 }
 
+/* Quiet, dark CTA — same idea as the classic theme's black button. */
 body.kcBodyClass .pf-m-primary,
 body.kcBodyClass #kc-login {
     width: 100%;
-    min-height: 2.95rem;
+    min-height: 2.8rem;
     padding: 0.7rem 1rem;
-    font-size: 0.98rem;
-    font-weight: 700;
-    letter-spacing: 0.015em;
-    color: #04161c;
-    background-color: var(--fn-accent-deep);
-    background-image: linear-gradient(135deg, #86ffe4 0%, #4fe3cb 55%, #37b9dd 100%);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    box-shadow:
-        0 12px 26px rgba(42, 197, 190, 0.24),
-        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #eaf6ff;
+    background-color: rgba(0, 0, 0, 0.62);
+    background-image: none;
+    border: 0;
+    box-shadow: none;
 }
 
 body.kcBodyClass .pf-m-primary:hover,
 body.kcBodyClass #kc-login:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.04);
-    box-shadow:
-        0 16px 32px rgba(42, 197, 190, 0.32),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    background-color: rgba(0, 0, 0, 0.78);
 }
 
 body.kcBodyClass .pf-m-primary:active,
 body.kcBodyClass #kc-login:active {
-    transform: none;
-    box-shadow: 0 8px 18px rgba(42, 197, 190, 0.25);
+    background-color: rgba(0, 0, 0, 0.78);
 }
 
 body.kcBodyClass .pf-m-primary:disabled,
 body.kcBodyClass .pf-m-primary[aria-disabled="true"],
 body.kcBodyClass #kc-login:disabled {
-    color: rgba(234, 246, 255, 0.48);
-    background-image: none;
-    background-color: rgba(255, 255, 255, 0.07);
-    border-color: rgba(255, 255, 255, 0.09);
-    box-shadow: none;
-    filter: none;
-    transform: none;
-    opacity: 1;
+    color: rgba(234, 246, 255, 0.35);
+    background-color: rgba(0, 0, 0, 0.3);
     cursor: not-allowed;
 }
 
@@ -494,11 +379,10 @@ body.kcBodyClass #kc-login:disabled {
 body.kcBodyClass a {
     color: var(--fn-accent);
     text-decoration: none;
-    transition: color 0.15s ease;
 }
 
 body.kcBodyClass a:hover {
-    color: #c9fff1;
+    color: #b9ffec;
     text-decoration: underline;
     text-underline-offset: 2px;
 }
@@ -506,7 +390,7 @@ body.kcBodyClass a:hover {
 body.kcBodyClass a:focus-visible,
 body.kcBodyClass button:focus-visible,
 body.kcBodyClass input:focus-visible {
-    outline: 2px solid var(--fn-accent);
+    outline: 2px solid rgba(106, 255, 211, 0.7);
     outline-offset: 2px;
 }
 
@@ -520,34 +404,34 @@ body.kcBodyClass .pf-c-alert {
     padding: 0.85rem 1rem;
     font-size: 0.88rem;
     color: var(--fn-text);
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.32);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-left-width: 3px;
-    border-radius: 12px;
+    border-radius: 10px;
 }
 
 body.kcBodyClass .pf-c-alert.pf-m-danger,
 body.kcBodyClass .alert-error {
-    background: rgba(255, 86, 86, 0.13);
-    border-color: rgba(255, 120, 120, 0.4);
+    background: rgba(255, 86, 86, 0.12);
+    border-color: rgba(255, 120, 120, 0.35);
 }
 
 body.kcBodyClass .pf-c-alert.pf-m-warning,
 body.kcBodyClass .alert-warning {
-    background: rgba(255, 190, 90, 0.12);
-    border-color: rgba(255, 200, 120, 0.4);
+    background: rgba(255, 190, 90, 0.1);
+    border-color: rgba(255, 200, 120, 0.32);
 }
 
 body.kcBodyClass .pf-c-alert.pf-m-success,
 body.kcBodyClass .alert-success {
-    background: rgba(106, 255, 211, 0.1);
-    border-color: rgba(106, 255, 211, 0.35);
+    background: rgba(106, 255, 211, 0.08);
+    border-color: rgba(106, 255, 211, 0.3);
 }
 
 body.kcBodyClass .pf-c-alert.pf-m-info,
 body.kcBodyClass .alert-info {
-    background: rgba(101, 191, 232, 0.12);
-    border-color: rgba(101, 191, 232, 0.38);
+    background: rgba(101, 191, 232, 0.1);
+    border-color: rgba(101, 191, 232, 0.3);
 }
 
 body.kcBodyClass .pf-c-alert__title {
@@ -564,13 +448,13 @@ body.kcBodyClass .pf-c-alert__description {
 
 body.kcBodyClass #kc-info {
     margin: 0;
-    padding: 1.4rem 0 0;
-    font-size: 0.9rem;
+    padding: 1.25rem 0 0;
+    font-size: 0.88rem;
     text-align: center;
     color: var(--fn-muted);
     background: none;
     border: 0;
-    border-top: 1px solid rgba(101, 191, 232, 0.18);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 body.kcBodyClass #kc-info-wrapper {
@@ -583,15 +467,15 @@ body.kcBodyClass #kc-info a {
     font-weight: 600;
 }
 
-/* Last line under the card. */
+/* Small line under the card. */
 body.kcBodyClass .login-pf-page::after {
     content: "FloodNet NYC · Real-time flood monitoring";
-    margin-top: 1.6rem;
-    font-size: 0.68rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    margin-top: 1.4rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    text-transform: none;
     text-align: center;
-    color: rgba(210, 232, 248, 0.48);
+    color: rgba(226, 240, 252, 0.42);
 }
 
 /* ------------------------------------------------------ other page bits */
@@ -654,12 +538,11 @@ body.kcBodyClass .pf-c-tile {
     color: var(--fn-text);
     background: var(--fn-field);
     border: 1px solid var(--fn-border);
-    border-radius: 12px;
+    border-radius: 10px;
     cursor: pointer;
     transition:
         border-color 0.16s ease,
-        background-color 0.16s ease,
-        box-shadow 0.16s ease;
+        background-color 0.16s ease;
 }
 
 body.kcBodyClass .pf-c-tile .pf-c-tile__title,
@@ -676,13 +559,13 @@ body.kcBodyClass .pf-c-tile .pf-c-tile__header {
 }
 
 body.kcBodyClass .pf-c-tile:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.48);
     border-color: var(--fn-border-strong);
 }
 
 body.kcBodyClass .pf-c-tile.pf-m-selected {
-    border-color: var(--fn-accent);
-    box-shadow: 0 0 0 3px rgba(106, 255, 211, 0.16);
+    border-color: rgba(106, 255, 211, 0.7);
+    box-shadow: 0 0 0 2px rgba(106, 255, 211, 0.12);
 }
 
 /* Error / info copy on the generic message pages. */
@@ -691,19 +574,19 @@ body.kcBodyClass #kc-content-wrapper .instruction {
     color: var(--fn-muted);
 }
 
-/* Social / identity-provider buttons and secondary actions. */
-body.kcBodyClass .pf-c-button.pf-m-secondary,
-body.kcBodyClass .pf-c-button.pf-m-tertiary,
-body.kcBodyClass .pf-c-button.pf-m-link {
-    color: var(--fn-text);
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--fn-border);
-}
-
-body.kcBodyClass .pf-c-button.pf-m-secondary:hover,
-body.kcBodyClass .pf-c-button.pf-m-tertiary:hover {
-    background: rgba(255, 255, 255, 0.11);
-    border-color: var(--fn-border-strong);
+/* Keycloak renders the OTP credential radio buttons as siblings of the tile
+ * labels. Hide them visually; the label still selects them. */
+body.kcBodyClass .pf-c-tile__input,
+body.kcBodyClass .kcLoginOTPListInputClass {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    opacity: 0;
 }
 
 /* --------------------------------------------------------------- mobile */
@@ -717,30 +600,27 @@ body.kcBodyClass .pf-c-button.pf-m-tertiary:hover {
         padding: 1.5rem 0.75rem;
     }
 
-    body.kcBodyClass #kc-header {
-        margin-bottom: 1.1rem;
-    }
-
-    body.kcBodyClass #kc-header-wrapper {
-        width: 76px;
-        height: 76px;
-    }
-
     body.kcBodyClass .card-pf {
         width: 100%;
-        padding: 1.7rem 1.3rem 1.6rem;
+        padding: 1.6rem 1.25rem 1.7rem;
         border-radius: 18px;
     }
 
+    body.kcBodyClass .card-pf::before {
+        width: 84px;
+        height: 84px;
+        margin-bottom: 1.05rem;
+    }
+
     body.kcBodyClass #kc-page-title {
-        margin-bottom: 1.25rem;
-        font-size: 1.28rem;
+        margin-bottom: 0.95rem;
+        font-size: 1.25rem;
     }
 
     body.kcBodyClass .login-pf-settings {
         align-items: flex-start;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.7rem;
     }
 
     body.kcBodyClass .pf-c-form-control {
@@ -757,25 +637,10 @@ body.kcBodyClass .pf-c-button.pf-m-tertiary:hover {
     }
 }
 
-/* Printable / high-contrast fallback: keep the form usable without the photo. */
+/* Printable fallback: keep the form usable without the photo. */
 @media print {
     body.kcBodyClass {
         background: #fff;
         color: #000;
     }
-}
-
-/* Keycloak renders the OTP credential radio buttons as siblings of the tile
- * labels. Hide them visually; the label still selects them. */
-body.kcBodyClass .pf-c-tile__input,
-body.kcBodyClass .kcLoginOTPListInputClass {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: 0;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
-    opacity: 0;
 }

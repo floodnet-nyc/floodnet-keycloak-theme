@@ -114,9 +114,21 @@ html body .pf-v5-c-masthead {
     -webkit-backdrop-filter: blur(14px) saturate(120%);
 }
 
-html body .pf-v5-c-masthead__toggle .pf-v5-c-button {
-    --pf-v5-c-button--m-plain--Color: var(--fn-ink);
+html body .pf-v5-c-masthead__toggle {
     color: var(--fn-ink);
+}
+
+html body .pf-v5-c-masthead__toggle .pf-v5-c-button {
+    --pf-v5-c-button--m-plain--Color: var(--fn-ink) !important;
+    --pf-v5-c-button--m-plain--hover--Color: var(--fn-ink) !important;
+    --pf-v5-c-button--m-plain--focus--Color: var(--fn-ink) !important;
+    --pf-v5-c-button--m-plain--active--Color: var(--fn-ink) !important;
+    color: var(--fn-ink) !important;
+}
+
+html body .pf-v5-c-masthead__toggle .pf-v5-c-button svg {
+    color: var(--fn-ink) !important;
+    fill: currentColor !important;
 }
 
 html body .pf-v5-c-masthead__brand {
@@ -779,7 +791,71 @@ html body .pf-v5-c-backdrop {
 
 /* ---------------------------------------------------------------- mobile */
 
+/* Collapsed rail (desktop): keep the ink card as a 76px icon strip instead of
+ * clipping it to a dark sliver. */
+@media (min-width: 1200px) {
+    html body .pf-v5-c-page:has(> .pf-v5-c-page__sidebar.pf-m-collapsed) {
+        grid-template-columns: 76px minmax(0, 1fr);
+    }
+
+    html body .pf-v5-c-page__sidebar.pf-m-collapsed {
+        width: 76px !important;
+        max-width: 76px !important;
+        padding: 24px 8px 28px !important;
+        overflow: visible !important;
+    }
+
+    html body .pf-v5-c-page__sidebar.pf-m-collapsed .pf-v5-c-page__sidebar-body {
+        padding: 12px 8px !important;
+        border-radius: 20px !important;
+        overflow-y: auto !important;
+    }
+
+    html body .pf-v5-c-page__sidebar.pf-m-collapsed .fn-nav__label,
+    html body .pf-v5-c-page__sidebar.pf-m-collapsed .fn-nav__group-label,
+    html body .pf-v5-c-page__sidebar.pf-m-collapsed .fn-nav__footer,
+    html body .pf-v5-c-page__sidebar.pf-m-collapsed .fn-nav__text {
+        display: none !important;
+    }
+
+    html body .pf-v5-c-page__sidebar.pf-m-collapsed .fn-nav__link {
+        justify-content: center;
+        padding: 10px;
+        border-radius: 12px;
+    }
+
+    html body .pf-v5-c-page__sidebar.pf-m-collapsed .fn-nav__icon {
+        width: 20px;
+        height: 20px;
+        flex-basis: 20px;
+    }
+
+    html body .pf-v5-c-page__sidebar.pf-m-collapsed .fn-nav__dot {
+        display: none;
+    }
+
+    html body .pf-v5-c-page__sidebar.pf-m-collapsed .fn-nav__sublist {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+}
+
 @media (max-width: 1199px) {
+    /* Off-canvas drawer: dim the page behind it and lift the panel. */
+    html body .pf-v5-c-page:has(> .pf-v5-c-page__sidebar.pf-m-expanded)::after {
+        content: "";
+        position: fixed;
+        inset: 71px 0 0;
+        z-index: 150;
+        background-color: rgba(4, 12, 20, 0.45);
+        pointer-events: none;
+    }
+
+    html body .pf-v5-c-page__sidebar {
+        box-shadow: 24px 0 60px -24px rgba(4, 12, 20, 0.6);
+    }
+
     /* With the form stacked, the jump rail is just noise above the fields. */
     html body .fn-page__surface .pf-v5-c-page__main-section:has(.pf-v5-c-jump-links) {
         display: none;

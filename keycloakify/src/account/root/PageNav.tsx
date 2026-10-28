@@ -173,6 +173,7 @@ export const NavLink = ({
     const menuItemPath = getFullUrl(path, environment.baseUrl) + location.search;
     const href = useHref(menuItemPath);
     const handleClick = useLinkClickHandler(menuItemPath);
+    const label = typeof children === "string" ? children : undefined;
 
     const onNavigate = () => {
         // On small screens the PatternFly sidebar is an off-canvas drawer;
@@ -186,6 +187,8 @@ export const NavLink = ({
         <a
             data-testid={path}
             href={href}
+            title={label}
+            aria-label={label}
             aria-current={isActive ? "page" : undefined}
             className={`fn-nav__link${isActive ? " fn-nav__link--active" : ""}`}
             onClick={event => {

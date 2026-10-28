@@ -69,9 +69,11 @@ export default function LoginWaterField() {
         let frame = 0;
         let lastFrameTime = 0;
         let accumulator = 0;
-        let lastStampX = Number.NaN;
-        let lastStampY = Number.NaN;
-        let lastStampTime = Number.NaN;
+        let pendingFromX = Number.NaN;
+        let pendingFromY = Number.NaN;
+        let pendingToX = Number.NaN;
+        let pendingToY = Number.NaN;
+        let pendingSince = 0;
         let smoothedSpeed = 0;
         let calmFrames = 0;
         let running = false;
@@ -82,8 +84,8 @@ export default function LoginWaterField() {
                 Math.min(160, Math.round((SIM_COLS * height) / Math.max(1, width)))
             );
             const speedScale = Math.max(
-                0.55,
-                Math.min(1.65, REFERENCE_WIDTH / Math.max(1, width))
+                0.25,
+                Math.min(1.95, REFERENCE_WIDTH / Math.max(1, width))
             );
             const c2 = Math.min(MAX_C2, BASE_C2 * speedScale * speedScale);
             grid = {
@@ -295,8 +297,12 @@ export default function LoginWaterField() {
                     const height = curr[index];
                     const dx = curr[index + 1] - curr[index - 1];
                     const dy = curr[index + cols] - curr[index - cols];
-                    const lightSlope = Math.max(0, dx * 0.9 + dy * 0.4);
-                    const glow = Math.min(1, lightSlope * 46 + Math.max(0, height) * 0.7);
+                    const keyLight = Math.max(0, dx * 0.9 + dy * 0.4);
+                    const fillLight = Math.max(0, -dx * 0.9 - dy * 0.4);
+                    const glow = Math.min(
+                        1,
+                        keyLight * 46 + fillLight * 9 + Math.max(0, height) * 0.6
+                    );
 
                     if (glow < 0.02) continue;
 
@@ -342,6 +348,11 @@ export default function LoginWaterField() {
             frame = 0;
             running = false;
             accumulator = 0;
+            pendingFromX = Number.NaN;
+            pendingFromY = Number.NaN;
+            pendingToX = Number.NaN;
+            pendingToY = Number.NaN;
+            smoothedSpeed = 0;
             display.clearRect(0, 0, width, height);
             if (grid) {
                 grid.prev.fill(0);
@@ -360,7 +371,12 @@ export default function LoginWaterField() {
             accumulator += delta;
 
             let steps = 0;
+            let forcingApplied = false;
             while (accumulator >= SIM_STEP && steps < MAX_SUBSTEPS) {
+                if (!forcingApplied) {
+                    applyPendingForcing(now);
+                    forcingApplied = true;
+                }
                 stepSimulation();
                 accumulator -= SIM_STEP;
                 steps += 1;
@@ -368,6 +384,7 @@ export default function LoginWaterField() {
 
             if (steps > 0) {
                 render();
+                drawDebug();
                 calmFrames = isCalm() ? calmFrames + 1 : 0;
                 if (calmFrames > 24) {
                     stop();
@@ -387,65 +404,61 @@ export default function LoginWaterField() {
             frame = window.requestAnimationFrame(loop);
         };
 
-        const stampSegment = (toX: number, toY: number, timeStamp: number) => {
-            if (!grid) return false;
+        const applyPendingForcing = (now: number) => {
+            if (!grid) return;
+            if (
+                !Number.isFinite(pendingFromX) ||
+                !Number.isFinite(pendingToX)
+            ) {
+                return;
+            }
+
+            const dx = pendingToX - pendingFromX;
+            const dy = pendingToY - pendingFromY;
+            const distance = Math.hypot(dx, dy);
+            if (distance < 0.75) return;
+
+            if (distance > 420) {
+                pendingFromX = pendingToX;
+                pendingFromY = pendingToY;
+                pendingSince = now;
+                smoothedSpeed = 0;
+                return;
+            }
 
             const cellSize = width / SIM_COLS;
-            const baseRadius = Math.max(2.0, TRAIL_RADIUS_PX / cellSize);
-            const pointStrength = 0.014;
-
-            if (!Number.isFinite(lastStampX) || !Number.isFinite(lastStampY)) {
-                addCapsule(toX, toY, toX, toY, baseRadius, pointStrength);
-                recordDebugTrail(toX, toY, toX, toY, baseRadius * cellSize);
-                trimDebugShapes();
-                lastStampX = toX;
-                lastStampY = toY;
-                lastStampTime = timeStamp;
-                return true;
-            }
-
-            const dx = toX - lastStampX;
-            const dy = toY - lastStampY;
-            const distance = Math.hypot(dx, dy);
-            if (distance < 0.75) return false;
-
-            // A pointer leaving and re-entering far away should not carve a
-            // line across the whole scene.
-            if (distance > 420) {
-                lastStampX = toX;
-                lastStampY = toY;
-                lastStampTime = timeStamp;
-                smoothedSpeed = 0;
-                addCapsule(toX, toY, toX, toY, baseRadius, pointStrength);
-                recordDebugTrail(toX, toY, toX, toY, baseRadius * cellSize);
-                trimDebugShapes();
-                return true;
-            }
-
-            const elapsed = Number.isFinite(lastStampTime)
-                ? Math.max(1, timeStamp - lastStampTime)
-                : 16;
+            const elapsed = Number.isFinite(pendingSince)
+                ? Math.max(SIM_STEP * 1000, now - pendingSince)
+                : SIM_STEP * 1000;
             const rawSpeed = distance / elapsed; // CSS pixels per millisecond
             smoothedSpeed += (Math.min(2.5, rawSpeed) - smoothedSpeed) * 0.22;
-            lastStampTime = timeStamp;
 
             const speedScale = 1 + Math.min(1.05, smoothedSpeed * 0.65);
             const trailRadius = Math.max(2.0, (TRAIL_RADIUS_PX * speedScale) / cellSize);
-            const trailStrength = Math.min(0.05, 0.018 + distance / 1400);
+            // The displacement is per path length, so slow movement does not
+            // accumulate a pulse for every pointer callback.
+            const trailStrength = Math.min(0.12, distance * 0.003);
 
-            addCapsule(lastStampX, lastStampY, toX, toY, trailRadius, trailStrength);
+            addCapsule(
+                pendingFromX,
+                pendingFromY,
+                pendingToX,
+                pendingToY,
+                trailRadius,
+                trailStrength
+            );
             recordDebugTrail(
-                lastStampX,
-                lastStampY,
-                toX,
-                toY,
+                pendingFromX,
+                pendingFromY,
+                pendingToX,
+                pendingToY,
                 trailRadius * cellSize
             );
             trimDebugShapes();
 
-            lastStampX = toX;
-            lastStampY = toY;
-            return true;
+            pendingFromX = pendingToX;
+            pendingFromY = pendingToY;
+            pendingSince = now;
         };
 
         const onPointerMove = (event: PointerEvent) => {
@@ -456,20 +469,43 @@ export default function LoginWaterField() {
                     ? event.getCoalescedEvents()
                     : [];
             const samples = coalesced.length > 0 ? coalesced : [event];
-            let stamped = false;
+            let moved = false;
+
             for (const sample of samples) {
-                stamped =
-                    stampSegment(
-                        sample.clientX,
-                        sample.clientY,
-                        sample.timeStamp || performance.now()
-                    ) || stamped;
+                const x = sample.clientX;
+                const y = sample.clientY;
+                const time = sample.timeStamp || performance.now();
+
+                if (!Number.isFinite(pendingFromX) || !Number.isFinite(pendingToX)) {
+                    pendingFromX = x;
+                    pendingFromY = y;
+                    pendingToX = x;
+                    pendingToY = y;
+                    pendingSince = time;
+                    moved = true;
+                    continue;
+                }
+
+                const jump = Math.hypot(x - pendingToX, y - pendingToY);
+                if (jump > 420) {
+                    pendingFromX = x;
+                    pendingFromY = y;
+                    pendingToX = x;
+                    pendingToY = y;
+                    pendingSince = time;
+                    smoothedSpeed = 0;
+                    moved = true;
+                    continue;
+                }
+
+                if (jump > 0.1) {
+                    pendingToX = x;
+                    pendingToY = y;
+                    moved = true;
+                }
             }
 
-            if (stamped) {
-                start();
-                drawDebug();
-            }
+            if (moved) start();
         };
 
         const onVisibilityChange = () => {

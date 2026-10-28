@@ -2,10 +2,10 @@ import { useEffect, useRef } from "react";
 
 const SIM_COLS = 120;
 const SIM_STEP = 1 / 60;
-const BASE_C2 = 0.18;
+const BASE_C2 = 0.12;
 const REFERENCE_WIDTH = 1440;
 const MAX_C2 = 0.42;
-const DAMPING = 0.994;
+const DAMPING = 0.990;
 const TRAIL_RADIUS_PX = 18;
 
 // Two-light palettes for the caustics. The key comes from the upper left,
@@ -26,7 +26,17 @@ const PALETTES = {
     moonpool: {
         key: [155, 210, 255] as const,
         fill: [88, 58, 200] as const
-    }
+    },
+    puddle: {
+        // soft blue #5ba8c2 (puddle), fill = deep blue #0047ab (water)
+        key: [91, 168, 194] as const,
+        fill: [0, 71, 171] as const
+    },
+    dusk: {
+        // warm peach #ff8f3e (streetlights), fill = violet-blue #003cef (rainy dusk)
+        key: [255, 143, 62] as const,
+        fill: [0, 0, 0] as const
+    },
 } as const;
 
 // Change this one line to preview a palette.
@@ -138,6 +148,10 @@ export default function LoginWaterField() {
             canvas.style.width = `${width}px`;
             canvas.style.height = `${height}px`;
             display.setTransform(dpr, 0, 0, dpr, 0, 0);
+            display.imageSmoothingEnabled = true;
+            display.imageSmoothingQuality = "high";
+            const waterBlur = Math.min(7, Math.max(2.4, (width / SIM_COLS) * 0.5));
+            canvas.style.setProperty("--fn-water-blur", `${waterBlur}px`);
             if (debugCanvas && debugContext) {
                 debugCanvas.width = Math.round(width * dpr);
                 debugCanvas.height = Math.round(height * dpr);
@@ -325,18 +339,19 @@ export default function LoginWaterField() {
                     const dy = curr[index + cols] - curr[index - cols];
                     const keyLight = Math.max(0, dx * 0.9 + dy * 0.4);
                     const fillLight = Math.max(0, -dx * 0.9 - dy * 0.4);
-                    const keyGlow = Math.min(
-                        1,
-                        keyLight * 42 + Math.max(0, height) * 0.5
-                    );
-                    const fillGlow = Math.min(1, fillLight * 16);
-                    const totalGlow = keyGlow + fillGlow;
+                    const rawKey = keyLight * 42 + Math.max(0, height) * 0.5;
+                    const rawFill = fillLight * 16;
+                    const raw = rawKey + rawFill;
 
-                    if (totalGlow < 0.02) continue;
-
-                    const mix = keyGlow / totalGlow;
-                    const lift = 0.82 + 0.18 * Math.min(1, totalGlow * 1.2);
+                    // A soft knee and Reinhard curve: faint residual waves fall
+                    // away gradually instead of clipping into hard bands.
+                    const shaped = Math.max(0, raw - 0.012);
+                    if (shaped < 0.004) continue;
+                    const glow = shaped / (1 + shaped);
+                    const mix = rawKey / Math.max(0.0001, rawKey + rawFill);
+                    const lift = 0.7 + 0.3 * glow;
                     const pixel = index * 4;
+
                     // Blend the two light directions into a gradient rather
                     // than flattening everything to one blue.
                     pixels[pixel] = Math.min(
@@ -364,7 +379,7 @@ export default function LoginWaterField() {
                         )
                     );
                     pixels[pixel + 3] = Math.round(
-                        255 * Math.min(0.6, Math.pow(totalGlow, 1.4) * 0.45)
+                        255 * Math.min(0.58, Math.pow(glow, 1.25) * 0.8)
                     );
                 }
             }

@@ -8,10 +8,30 @@ const MAX_C2 = 0.42;
 const DAMPING = 0.994;
 const TRAIL_RADIUS_PX = 18;
 
-// Two directional lights, inspired by the login card and photo:
-// a mint key from the top-left and a cobalt fill from the bottom-right.
-const KEY_LIGHT_COLOR = [255, 122, 217] as const;
-const FILL_LIGHT_COLOR = [73, 200, 255] as const;
+// Two-light palettes for the caustics. The key comes from the upper left,
+// the fill from the lower right. Add or tune entries here.
+const PALETTES = {
+    ultraviolet: {
+        key: [255, 122, 217] as const,
+        fill: [73, 200, 255] as const
+    },
+    afterglow: {
+        key: [255, 184, 138] as const,
+        fill: [96, 86, 255] as const
+    },
+    tidepool: {
+        key: [124, 255, 226] as const,
+        fill: [62, 88, 255] as const
+    },
+    moonpool: {
+        key: [155, 210, 255] as const,
+        fill: [88, 58, 200] as const
+    }
+} as const;
+
+// Change this one line to preview a palette.
+const ACTIVE_PALETTE: keyof typeof PALETTES = "ultraviolet";
+const PALETTE = PALETTES[ACTIVE_PALETTE];
 const MAX_SUBSTEPS = 3;
 
 type DebugShape = {
@@ -158,13 +178,14 @@ export default function LoginWaterField() {
 
             // Legend
             debugContext.fillStyle = "rgba(4, 16, 26, 0.78)";
-            debugContext.fillRect(16, 16, 300, 62);
+            debugContext.fillRect(16, 16, 300, 78);
             debugContext.fillStyle = "rgba(255, 120, 205, 1)";
             debugContext.fillRect(28, 33, 18, 4);
             debugContext.fillStyle = "rgba(235, 250, 255, 0.92)";
             debugContext.font = "12px system-ui, sans-serif";
             debugContext.fillText("trail capsule only", 54, 39);
-            debugContext.fillText("Shift+D toggles this overlay", 28, 62);
+            debugContext.fillText(`palette: ${ACTIVE_PALETTE}`, 28, 61);
+            debugContext.fillText("Shift+D toggles this overlay", 28, 79);
             debugContext.restore();
         };
 
@@ -321,24 +342,24 @@ export default function LoginWaterField() {
                     pixels[pixel] = Math.min(
                         255,
                         Math.round(
-                            (KEY_LIGHT_COLOR[0] * mix +
-                                FILL_LIGHT_COLOR[0] * (1 - mix)) *
+                            (PALETTE.key[0] * mix +
+                                PALETTE.fill[0] * (1 - mix)) *
                                 lift
                         )
                     );
                     pixels[pixel + 1] = Math.min(
                         255,
                         Math.round(
-                            (KEY_LIGHT_COLOR[1] * mix +
-                                FILL_LIGHT_COLOR[1] * (1 - mix)) *
+                            (PALETTE.key[1] * mix +
+                                PALETTE.fill[1] * (1 - mix)) *
                                 lift
                         )
                     );
                     pixels[pixel + 2] = Math.min(
                         255,
                         Math.round(
-                            (KEY_LIGHT_COLOR[2] * mix +
-                                FILL_LIGHT_COLOR[2] * (1 - mix)) *
+                            (PALETTE.key[2] * mix +
+                                PALETTE.fill[2] * (1 - mix)) *
                                 lift
                         )
                     );

@@ -10,6 +10,24 @@ const TRAIL_RADIUS_PX = 18;
 const HEAD_RADIUS_PX = 30;
 const MAX_SUBSTEPS = 3;
 
+type DebugShape =
+    | {
+          kind: "trail";
+          x0: number;
+          y0: number;
+          x1: number;
+          y1: number;
+          radius: number;
+          born: number;
+      }
+    | {
+          kind: "head";
+          x: number;
+          y: number;
+          radius: number;
+          born: number;
+      };
+
 type Grid = {
     cols: number;
     rows: number;
@@ -30,6 +48,7 @@ type Grid = {
  */
 export default function LoginWaterField() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const debugCanvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -45,6 +64,12 @@ export default function LoginWaterField() {
         const fieldCanvas = document.createElement("canvas");
         const fieldContext = fieldCanvas.getContext("2d");
         if (!fieldContext) return;
+
+        const debugCanvas = debugCanvasRef.current;
+        const debugContext = debugCanvas?.getContext("2d") ?? null;
+        let debugEnabled = window.localStorage.getItem("fnWaterDebug") === "1";
+        if (debugEnabled) document.body.classList.add("fn-water-debug-on");
+        const debugShapes: DebugShape[] = [];
 
         let width = 0;
         let height = 0;
@@ -94,7 +119,106 @@ export default function LoginWaterField() {
             canvas.style.width = `${width}px`;
             canvas.style.height = `${height}px`;
             display.setTransform(dpr, 0, 0, dpr, 0, 0);
+            if (debugCanvas && debugContext) {
+                debugCanvas.width = Math.round(width * dpr);
+                debugCanvas.height = Math.round(height * dpr);
+                debugCanvas.style.width = `${width}px`;
+                debugCanvas.style.height = `${height}px`;
+                debugContext.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
             resetGrid();
+            drawDebug();
+        };
+
+        const drawDebug = () => {
+            if (!debugEnabled || !debugContext) return;
+            debugContext.clearRect(0, 0, width, height);
+            const now = performance.now();
+            debugContext.save();
+            debugContext.lineCap = "round";
+            debugContext.lineJoin = "round";
+
+            for (let index = 0; index < debugShapes.length; index += 1) {
+                const shape = debugShapes[index];
+                const age = Math.min(1, (now - shape.born) / 2600);
+                const ageAlpha = Math.max(0, 1 - age);
+                const recency = 0.35 + (0.65 * index) / Math.max(1, debugShapes.length);
+                const alpha = ageAlpha * recency;
+                if (alpha <= 0.02) continue;
+
+                if (shape.kind === "trail") {
+                    debugContext.beginPath();
+                    debugContext.moveTo(shape.x0, shape.y0);
+                    debugContext.lineTo(shape.x1, shape.y1);
+                    debugContext.lineWidth = Math.max(2, shape.radius * 2);
+                    debugContext.strokeStyle = `rgba(255, 60, 170, ${alpha * 0.28})`;
+                    debugContext.stroke();
+                    debugContext.lineWidth = 1.4;
+                    debugContext.strokeStyle = `rgba(255, 120, 205, ${alpha * 0.9})`;
+                    debugContext.stroke();
+                } else {
+                    debugContext.beginPath();
+                    debugContext.arc(shape.x, shape.y, shape.radius, 0, Math.PI * 2);
+                    debugContext.fillStyle = `rgba(70, 255, 165, ${alpha * 0.12})`;
+                    debugContext.fill();
+                    debugContext.lineWidth = 1.6;
+                    debugContext.strokeStyle = `rgba(95, 255, 185, ${alpha * 0.9})`;
+                    debugContext.stroke();
+                    debugContext.beginPath();
+                    debugContext.moveTo(shape.x - 4, shape.y);
+                    debugContext.lineTo(shape.x + 4, shape.y);
+                    debugContext.moveTo(shape.x, shape.y - 4);
+                    debugContext.lineTo(shape.x, shape.y + 4);
+                    debugContext.stroke();
+                }
+            }
+
+            // Legend
+            debugContext.fillStyle = "rgba(4, 16, 26, 0.78)";
+            debugContext.fillRect(16, 16, 320, 86);
+            debugContext.fillStyle = "rgba(255, 120, 205, 1)";
+            debugContext.fillRect(28, 30, 18, 4);
+            debugContext.fillStyle = "rgba(95, 255, 185, 1)";
+            debugContext.beginPath();
+            debugContext.arc(37, 56, 6, 0, Math.PI * 2);
+            debugContext.strokeStyle = "rgba(95, 255, 185, 1)";
+            debugContext.stroke();
+            debugContext.fillStyle = "rgba(235, 250, 255, 0.92)";
+            debugContext.font = "12px system-ui, sans-serif";
+            debugContext.fillText("trail capsule (magenta)", 54, 38);
+            debugContext.fillText("leading head (green)", 54, 61);
+            debugContext.fillText("Shift+D toggles this overlay", 28, 84);
+            debugContext.restore();
+        };
+
+        const recordDebugTrail = (
+            x0: number,
+            y0: number,
+            x1: number,
+            y1: number,
+            radius: number
+        ) => {
+            if (!debugEnabled) return;
+            debugShapes.push({
+                kind: "trail",
+                x0,
+                y0,
+                x1,
+                y1,
+                radius,
+                born: performance.now()
+            });
+        };
+
+        const recordDebugHead = (x: number, y: number, radius: number) => {
+            if (!debugEnabled) return;
+            debugShapes.push({ kind: "head", x, y, radius, born: performance.now() });
+        };
+
+        const trimDebugShapes = () => {
+            if (debugShapes.length > 80) {
+                debugShapes.splice(0, debugShapes.length - 80);
+            }
         };
 
         const addCapsule = (
@@ -315,6 +439,8 @@ export default function LoginWaterField() {
 
             if (!Number.isFinite(lastStampX) || !Number.isFinite(lastStampY)) {
                 addCapsule(toX, toY, toX, toY, headRadius, 0.022);
+                recordDebugHead(toX, toY, headRadius * cellSize);
+                trimDebugShapes();
                 lastStampX = toX;
                 lastStampY = toY;
                 return true;
@@ -331,6 +457,8 @@ export default function LoginWaterField() {
                 lastStampX = toX;
                 lastStampY = toY;
                 addCapsule(toX, toY, toX, toY, headRadius, 0.022);
+                recordDebugHead(toX, toY, headRadius * cellSize);
+                trimDebugShapes();
                 return true;
             }
 
@@ -354,6 +482,20 @@ export default function LoginWaterField() {
                 headStrength
             );
 
+            recordDebugTrail(
+                lastStampX,
+                lastStampY,
+                toX,
+                toY,
+                trailRadius * (width / SIM_COLS)
+            );
+            recordDebugHead(
+                toX + vx * lead,
+                toY + vy * lead,
+                headRadius * (0.9 + speed * 0.28) * (width / SIM_COLS)
+            );
+            trimDebugShapes();
+
             lastStampX = toX;
             lastStampY = toY;
             return true;
@@ -372,25 +514,47 @@ export default function LoginWaterField() {
                 stamped = stampSegment(sample.clientX, sample.clientY) || stamped;
             }
 
-            if (stamped) start();
+            if (stamped) {
+                start();
+                drawDebug();
+            }
         };
 
         const onVisibilityChange = () => {
             if (document.hidden && running) stop();
         };
 
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (!(event.shiftKey && event.key.toLowerCase() === "d")) return;
+            debugEnabled = !debugEnabled;
+            document.body.classList.toggle("fn-water-debug-on", debugEnabled);
+            if (debugEnabled) {
+                drawDebug();
+            } else if (debugContext) {
+                debugContext.clearRect(0, 0, width, height);
+            }
+        };
+
         resize();
         window.addEventListener("resize", resize);
         window.addEventListener("pointermove", onPointerMove, { passive: true });
+        window.addEventListener("keydown", onKeyDown);
         document.addEventListener("visibilitychange", onVisibilityChange);
 
         return () => {
             window.cancelAnimationFrame(frame);
             window.removeEventListener("resize", resize);
             window.removeEventListener("pointermove", onPointerMove);
+            window.removeEventListener("keydown", onKeyDown);
             document.removeEventListener("visibilitychange", onVisibilityChange);
+            document.body.classList.remove("fn-water-debug-on");
         };
     }, []);
 
-    return <canvas ref={canvasRef} className="fn-water-field" aria-hidden="true" />;
+    return (
+        <>
+            <canvas ref={canvasRef} className="fn-water-field" aria-hidden="true" />
+            <canvas ref={debugCanvasRef} className="fn-water-debug" aria-hidden="true" />
+        </>
+    );
 }

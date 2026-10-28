@@ -54,6 +54,7 @@ body.kcBodyClass {
 
 body.kcBodyClass .login-pf-page {
     position: relative;
+    z-index: 1;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -62,6 +63,25 @@ body.kcBodyClass .login-pf-page {
     min-height: 100vh;
     min-height: 100dvh;
     padding: 2.5rem 1rem;
+}
+
+/* Gentle pointer ripples behind the glass card, on the sign-in page only.
+ * The component is inert for touch and reduced-motion users; these rules are
+ * just the visual layer it draws into. */
+.fn-ripples {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.78;
+}
+
+@media (prefers-reduced-motion: reduce), (pointer: coarse) {
+    .fn-ripples {
+        display: none;
+    }
 }
 
 /* ----------------------------------------------------------------- brand */

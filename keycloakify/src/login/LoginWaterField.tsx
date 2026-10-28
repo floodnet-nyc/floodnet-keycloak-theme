@@ -6,9 +6,9 @@ const BASE_C2 = 0.02;
 const REFERENCE_WIDTH = 1440;
 const MAX_C2 = 0.42;
 const DAMPING = 0.980;
-const TRAIL_RADIUS_PX = 18;
+const TRAIL_RADIUS_PX = 20;
 const DEBUG_FADE_MS = 800;
-const RAW_FIELD_SCALE = 0.85;
+const RAW_FIELD_SCALE = 0.15;
 
 // Two-light palettes for the caustics. The key comes from the upper left,
 // the fill from the lower right. Add or tune entries here.
@@ -601,10 +601,10 @@ export default function LoginWaterField() {
             const headRadius = Math.max(2.0, (TRAIL_RADIUS_PX * speedScale) / cellSize);
             const tailRadius = Math.max(1.5, headRadius * 0.45);
             const headStrength = Math.min(
-                0.075,
-                appliedDistance * 0.0018 * attenuation
+                0.11,
+                appliedDistance * 0.0032 * attenuation
             );
-            const tailStrength = headStrength * 0.18;
+            const tailStrength = headStrength * 0.22;
 
             addCapsule(
                 fromX,

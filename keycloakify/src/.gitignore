@@ -3,6 +3,7 @@
 # === Owned files start ===
 # account/colorScheme.ts
 # account/KcAccountUi.tsx
+# account/account-security/DeviceActivity.tsx
 # account/applications/Applications.tsx
 # account/assets/content.ts
 # account/root/Header.tsx
@@ -91,7 +92,6 @@
 /account/KcPage.tsx
 /account/routes.tsx
 /account/account-security/AccountRow.tsx
-/account/account-security/DeviceActivity.tsx
 /account/account-security/LinkedAccounts.tsx
 /account/account-security/LinkedAccountsToolbar.tsx
 /account/account-security/SigningIn.tsx

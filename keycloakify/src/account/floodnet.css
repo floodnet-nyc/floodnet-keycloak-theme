@@ -902,6 +902,60 @@ html body .fn-page__surface .pf-v5-c-data-list__item.pf-m-expanded {
     border-radius: 14px;
 }
 
+/* Credential category headers (Signing in): stack title and help text. */
+html body .fn-page__surface .pf-v5-l-split:has([data-testid$="/help-text"]) {
+    display: block;
+}
+
+html body .fn-page__surface .pf-v5-l-split:has([data-testid$="/help-text"]) .pf-v5-l-split__item {
+    display: block;
+}
+
+html body .fn-page__surface .pf-v5-l-split:has([data-testid$="/help-text"]) .pf-v5-c-title {
+    margin-bottom: 4px;
+}
+
+html body .fn-page__surface .pf-v5-l-split:has([data-testid$="/help-text"]) [data-testid$="/help-text"] {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--fn-muted);
+}
+
+/* Application status pills. */
+.fn-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+    border: 1px solid transparent;
+}
+
+.fn-status-pill::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: currentColor;
+    opacity: 0.55;
+}
+
+.fn-status-pill--in-use {
+    color: var(--fn-teal-deep);
+    background-color: var(--fn-mint-soft);
+    border-color: rgba(12, 122, 104, 0.16);
+}
+
+.fn-status-pill--not-in-use {
+    color: var(--fn-muted);
+    background-color: var(--fn-paper);
+    border-color: var(--fn-line);
+}
+
 html body .fn-page__surface .pf-v5-c-data-list__expandable-content {
     background-color: var(--fn-paper);
 }

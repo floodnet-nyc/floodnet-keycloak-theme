@@ -193,7 +193,15 @@ export const Applications = () => {
                                         width={2}
                                         key={`status${application.clientId}`}
                                     >
-                                        {application.inUse ? t("inUse") : t("notInUse")}
+                                        <span
+                                            className={`fn-status-pill ${
+                                                application.inUse
+                                                    ? "fn-status-pill--in-use"
+                                                    : "fn-status-pill--not-in-use"
+                                            }`}
+                                        >
+                                            {application.inUse ? t("inUse") : t("notInUse")}
+                                        </span>
                                     </DataListCell>
                                 ]}
                             />

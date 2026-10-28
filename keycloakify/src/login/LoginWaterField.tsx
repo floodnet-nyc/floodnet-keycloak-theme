@@ -5,9 +5,10 @@ const SIM_STEP = 1 / 60;
 const BASE_C2 = 0.02;
 const REFERENCE_WIDTH = 1440;
 const MAX_C2 = 0.42;
-const DAMPING = 0.985;
+const DAMPING = 0.982;
 const TRAIL_RADIUS_PX = 18;
 const DEBUG_FADE_MS = 800;
+const RAW_FIELD_SCALE = 0.45;
 
 // Two-light palettes for the caustics. The key comes from the upper left,
 // the fill from the lower right. Add or tune entries here.
@@ -188,9 +189,11 @@ export default function LoginWaterField() {
                 if (value > maxAbs) maxAbs = value;
             }
             const data = rawImage.data;
-            const inverse = 1 / maxAbs;
+            // Fixed scale so the debug view does not renormalize the residual
+            // field to full contrast every frame.
+            const inverse = 1 / RAW_FIELD_SCALE;
             for (let index = 0; index < curr.length; index += 1) {
-                const value = curr[index] * inverse;
+                const value = Math.max(-1, Math.min(1, curr[index] * inverse));
                 const pixel = index * 4;
                 if (value >= 0) {
                     data[pixel] = Math.round(24 + 220 * value);
@@ -209,11 +212,16 @@ export default function LoginWaterField() {
             debugContext.imageSmoothingEnabled = true;
             debugContext.drawImage(rawCanvas, 0, 0, cols, rows, 0, 0, width, height);
             debugContext.fillStyle = "rgba(4, 16, 26, 0.8)";
-            debugContext.fillRect(16, 16, 300, 55);
+            debugContext.fillRect(16, 16, 330, 72);
             debugContext.fillStyle = "rgba(235, 250, 255, 0.92)";
             debugContext.font = "12px system-ui, sans-serif";
             debugContext.fillText("raw height field (no lighting)", 28, 36);
-            debugContext.fillText("Shift+F returns to capsules", 28, 56);
+            debugContext.fillText(
+                `fixed scale ±${RAW_FIELD_SCALE.toFixed(3)}  max |h| ${maxAbs.toFixed(4)}`,
+                28,
+                56
+            );
+            debugContext.fillText("Shift+F returns to capsules", 28, 76);
         };
 
         const drawDebug = () => {

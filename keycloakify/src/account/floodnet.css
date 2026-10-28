@@ -176,8 +176,11 @@ html body .pf-v5-c-masthead .pf-v5-c-toolbar__item {
 }
 
 html body .pf-v5-c-masthead .pf-v5-c-menu-toggle:not(.pf-m-plain) {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     min-height: 38px;
-    padding: 5px 16px;
+    padding: 6px 14px;
     font-family: var(--fn-sans);
     font-size: 0.85rem;
     font-weight: 600;
@@ -201,6 +204,28 @@ html body .pf-v5-c-masthead .pf-v5-c-menu-toggle::after {
 html body .pf-v5-c-masthead .pf-v5-c-menu-toggle:not(.pf-m-plain):hover {
     border-color: var(--fn-line-strong);
     box-shadow: 0 3px 10px rgba(14, 34, 51, 0.08);
+}
+
+html body .pf-v5-c-masthead .pf-v5-c-menu-toggle__text {
+    line-height: 1.2;
+    padding: 0;
+}
+
+html body .pf-v5-c-masthead .pf-v5-c-menu-toggle__controls {
+    padding-left: 0;
+}
+
+html body .pf-v5-c-masthead .pf-v5-c-menu-toggle__toggle-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+}
+
+html body .pf-v5-c-masthead .pf-v5-c-menu-toggle__toggle-icon svg {
+    width: 12px;
+    height: 12px;
 }
 
 html body .pf-v5-c-masthead .pf-v5-c-menu-toggle.pf-m-plain {
@@ -383,9 +408,9 @@ html body .pf-v5-c-page__main > .fn-page {
 }
 
 .fn-nav__sublist .fn-nav__link {
-    padding: 8px 12px 8px 10px;
-    font-size: 0.84rem;
-    color: #a8c0cf;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    color: #cbdbe6;
 }
 
 .fn-nav__sublist .fn-nav__link--active,
@@ -509,16 +534,27 @@ html body .fn-page__surface .pf-v5-c-page__main-section + .pf-v5-c-page__main-se
 
 /* ------------------------------------------------------------------ form */
 
+html body .fn-page__surface .pf-v5-c-form {
+    gap: 18px;
+}
+
 html body .fn-page__surface .pf-v5-c-form__group {
-    margin-bottom: 18px;
+    margin-bottom: 0;
+}
+
+/* Horizontal form rows: centre labels against the 44px control. */
+html body .fn-page__surface .pf-v5-c-form__group {
+    align-items: center;
 }
 
 html body .fn-page__surface .pf-v5-c-form__group-label {
+    padding-block: 0;
     text-align: left;
 }
 
 html body .fn-page__surface .pf-v5-c-form__label {
     font-size: 0.8rem;
+    line-height: 1.25;
     font-weight: 600;
     color: var(--fn-muted);
     text-align: left;
@@ -530,66 +566,143 @@ html body .fn-page__surface .pf-v5-c-form__label-required {
     font-weight: 600;
 }
 
+/* PatternFly wraps text inputs in a span; make that wrapper inert and put the
+ * field chrome on the actual input so hover/focus/disabled all behave. */
 html body .pf-v5-c-form-control {
-    min-height: 44px;
-    font-family: var(--fn-sans);
-    font-size: 0.95rem;
-    color: var(--fn-ink);
-    background-color: #ffffff;
-    border: 1px solid var(--fn-line-strong);
-    border-bottom-color: var(--fn-line-strong);
-    border-radius: 10px;
+    display: block;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
     box-shadow: none;
-    transition:
-        border-color 0.15s ease,
-        box-shadow 0.15s ease;
 }
 
-html body .pf-v5-c-form-control:hover {
-    border-color: rgba(14, 34, 51, 0.34);
-}
-
-/* The visual field is the wrapper span; focus lives on the inner input, so
- * style the wrapper with :focus-within. */
-html body .pf-v5-c-form-control:focus-within {
-    outline: none;
-    border-color: var(--fn-teal);
-    box-shadow: 0 0 0 3px rgba(12, 122, 104, 0.14);
-}
-
-/* PatternFly adds square ::before/::after border overlays to the wrapper
- * (a grey bottom rule that turns blue on focus). The theme uses the wrapper's
- * own rounded border, so drop the overlays. */
 html body .pf-v5-c-form-control::before,
 html body .pf-v5-c-form-control::after {
     border: 0;
 }
 
-/* The inner control should be invisible plumbing: the span draws the field. */
 html body .pf-v5-c-form-control > input,
+html body .pf-v5-c-form-control > select,
 html body .pf-v5-c-form-control > textarea,
-html body .pf-v5-c-form-control > select {
+html body input.pf-v5-c-form-control,
+html body select.pf-v5-c-form-control,
+html body textarea.pf-v5-c-form-control {
+    box-sizing: border-box;
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.3;
     color: var(--fn-ink);
-    background-color: transparent;
-    border: 0;
-    outline: none;
+    background-color: #ffffff;
+    border: 1px solid var(--fn-line-strong);
+    border-radius: 10px;
     box-shadow: none;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background-color 0.15s ease;
 }
 
-html body .pf-v5-c-form-control > input:focus,
-html body .pf-v5-c-form-control > input:focus-visible,
-html body .pf-v5-c-form-control > textarea:focus,
-html body .pf-v5-c-form-control > select:focus {
+html body .pf-v5-c-form-control > input,
+html body .pf-v5-c-form-control > select,
+html body input.pf-v5-c-form-control,
+html body select.pf-v5-c-form-control {
+    height: 44px;
+    padding: 0 0.85rem;
+}
+
+html body .pf-v5-c-form-control > textarea,
+html body textarea.pf-v5-c-form-control {
+    min-height: 88px;
+    padding: 0.7rem 0.85rem;
+    resize: vertical;
+}
+
+html body .pf-v5-c-form-control > input:hover:not(:disabled),
+html body .pf-v5-c-form-control > select:hover:not(:disabled),
+html body .pf-v5-c-form-control > textarea:hover:not(:disabled),
+html body input.pf-v5-c-form-control:hover:not(:disabled),
+html body select.pf-v5-c-form-control:hover:not(:disabled),
+html body textarea.pf-v5-c-form-control:hover:not(:disabled) {
+    border-color: rgba(14, 34, 51, 0.34);
+}
+
+html body .pf-v5-c-form-control > input:focus:not(:disabled),
+html body .pf-v5-c-form-control > input:focus-visible:not(:disabled),
+html body .pf-v5-c-form-control > select:focus:not(:disabled),
+html body .pf-v5-c-form-control > textarea:focus:not(:disabled),
+html body input.pf-v5-c-form-control:focus:not(:disabled),
+html body select.pf-v5-c-form-control:focus:not(:disabled),
+html body textarea.pf-v5-c-form-control:focus:not(:disabled) {
     outline: none;
+    border-color: var(--fn-teal);
+    box-shadow: 0 0 0 3px rgba(12, 122, 104, 0.14);
 }
 
-html body .pf-v5-c-form-control::placeholder {
-    color: rgba(92, 109, 119, 0.7);
+/* Disabled fields should read as disabled at a glance. */
+html body .pf-v5-c-form-control > input:disabled,
+html body .pf-v5-c-form-control > select:disabled,
+html body .pf-v5-c-form-control > textarea:disabled,
+html body input.pf-v5-c-form-control:disabled,
+html body select.pf-v5-c-form-control:disabled,
+html body textarea.pf-v5-c-form-control:disabled {
+    color: #75828a;
+    background-color: var(--fn-paper-deep);
+    border-color: var(--fn-line);
+    cursor: not-allowed;
+    opacity: 1;
 }
 
-html body .pf-v5-c-form-control[aria-invalid="true"] {
+html body .pf-v5-c-form-control > input::placeholder,
+html body .pf-v5-c-form-control > textarea::placeholder,
+html body input.pf-v5-c-form-control::placeholder,
+html body textarea.pf-v5-c-form-control::placeholder {
+    color: rgba(92, 109, 119, 0.6);
+}
+
+html body .pf-v5-c-form-control > input[aria-invalid="true"],
+html body input.pf-v5-c-form-control[aria-invalid="true"] {
     border-color: var(--fn-coral);
     box-shadow: 0 0 0 3px rgba(184, 80, 58, 0.12);
+}
+
+/* Email + "Update email": the action sits under the field instead of
+ * squeezing it into an input group. */
+html body .fn-page__surface .pf-v5-c-form__group:has(#update-email-btn) {
+    align-items: start;
+}
+
+html body .fn-page__surface .pf-v5-c-form__group:has(#update-email-btn) .pf-v5-c-form__group-label {
+    padding-top: 13px;
+}
+
+html body .pf-v5-c-input-group:has(#update-email-btn) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.55rem;
+    width: 100%;
+}
+
+html body .pf-v5-c-input-group:has(#update-email-btn) .pf-v5-c-form-control {
+    width: 100%;
+}
+
+html body #update-email-btn {
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--fn-teal);
+}
+
+html body #update-email-btn .pf-v5-c-button__icon {
+    margin-left: 0.35rem;
+    font-size: 0.72rem;
 }
 
 html body .pf-v5-c-check__input,
@@ -684,6 +797,21 @@ html body .fn-page__surface .pf-v5-c-card {
 
 html body .pf-v5-c-page__main-section.pf-m-light {
     background-color: transparent;
+}
+
+html body .pf-v5-l-split {
+    align-items: center;
+}
+
+html body .pf-v5-l-split__item:last-child {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+
+html body .pf-v5-l-split__item:last-child .pf-v5-c-button.pf-m-link {
+    padding: 0 0.2rem;
 }
 
 /* Lists used by account security and applications. */
@@ -811,6 +939,7 @@ html body .pf-v5-c-alert__title {
 /* --------------------------------------------------------- menus / modals */
 
 html body .pf-v5-c-menu {
+    min-width: 180px;
     padding: 6px;
     background-color: var(--fn-surface);
     border: 1px solid var(--fn-line);
@@ -819,9 +948,12 @@ html body .pf-v5-c-menu {
 }
 
 html body .pf-v5-c-menu__item {
+    padding: 10px 12px;
     border-radius: 9px;
     color: var(--fn-ink);
     font-family: var(--fn-sans);
+    font-size: 0.86rem;
+    line-height: 1.3;
 }
 
 html body .pf-v5-c-menu__item:hover {

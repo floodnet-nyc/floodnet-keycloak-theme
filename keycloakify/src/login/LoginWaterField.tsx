@@ -37,8 +37,8 @@ const PALETTES = {
     },
     puddle: {
         // soft blue #5ba8c2 (puddle), fill = deep blue #0047ab (water)
-        key: hex2rgb("#2f3762"),
-        fill: hex2rgb("#00193b")
+        key: hex2rgb("#4d5580"),
+        fill: hex2rgb("#102f5b")
     },
     dusk: {
         // warm peach #ff8f3e (streetlights), fill = violet-blue #003cef (rainy dusk)
@@ -101,7 +101,11 @@ export default function LoginWaterField() {
 
         const debugCanvas = debugCanvasRef.current;
         const debugContext = debugCanvas?.getContext("2d") ?? null;
+        const rawCanvas = document.createElement("canvas");
+        const rawContext = rawCanvas.getContext("2d");
+        let rawImage: ImageData | null = null;
         let debugEnabled = window.localStorage.getItem("fnWaterDebug") === "1";
+        let debugFieldMode = false;
         if (debugEnabled) document.body.classList.add("fn-water-debug-on");
         const debugShapes: DebugShape[] = [];
 
@@ -145,6 +149,9 @@ export default function LoginWaterField() {
             fieldCanvas.height = rows;
             fieldImage = fieldContext.createImageData(SIM_COLS, rows);
             fieldContext.clearRect(0, 0, SIM_COLS, rows);
+            rawCanvas.width = SIM_COLS;
+            rawCanvas.height = rows;
+            rawImage = rawContext?.createImageData(SIM_COLS, rows) ?? null;
             calmFrames = 0;
         };
 
@@ -172,8 +179,49 @@ export default function LoginWaterField() {
             drawDebug();
         };
 
+        const drawRawField = () => {
+            if (!grid || !rawImage || !rawContext || !debugContext) return;
+            const { cols, rows, curr } = grid;
+            let maxAbs = 0.0001;
+            for (let index = 0; index < curr.length; index += 1) {
+                const value = Math.abs(curr[index]);
+                if (value > maxAbs) maxAbs = value;
+            }
+            const data = rawImage.data;
+            const inverse = 1 / maxAbs;
+            for (let index = 0; index < curr.length; index += 1) {
+                const value = curr[index] * inverse;
+                const pixel = index * 4;
+                if (value >= 0) {
+                    data[pixel] = Math.round(24 + 220 * value);
+                    data[pixel + 1] = Math.round(30 + 115 * value);
+                    data[pixel + 2] = Math.round(40 + 35 * value);
+                } else {
+                    const n = -value;
+                    data[pixel] = Math.round(8 + 18 * n);
+                    data[pixel + 1] = Math.round(26 + 58 * n);
+                    data[pixel + 2] = Math.round(36 + 170 * n);
+                }
+                data[pixel + 3] = 255;
+            }
+            rawContext.putImageData(rawImage, 0, 0);
+            debugContext.clearRect(0, 0, width, height);
+            debugContext.imageSmoothingEnabled = true;
+            debugContext.drawImage(rawCanvas, 0, 0, cols, rows, 0, 0, width, height);
+            debugContext.fillStyle = "rgba(4, 16, 26, 0.8)";
+            debugContext.fillRect(16, 16, 300, 55);
+            debugContext.fillStyle = "rgba(235, 250, 255, 0.92)";
+            debugContext.font = "12px system-ui, sans-serif";
+            debugContext.fillText("raw height field (no lighting)", 28, 36);
+            debugContext.fillText("Shift+F returns to capsules", 28, 56);
+        };
+
         const drawDebug = () => {
             if (!debugEnabled || !debugContext) return;
+            if (debugFieldMode) {
+                drawRawField();
+                return;
+            }
             debugContext.clearRect(0, 0, width, height);
             const now = performance.now();
             debugContext.save();
@@ -612,6 +660,14 @@ export default function LoginWaterField() {
         };
 
         const onKeyDown = (event: KeyboardEvent) => {
+            if (event.shiftKey && event.key.toLowerCase() === "f") {
+                debugFieldMode = !debugFieldMode;
+                debugEnabled = true;
+                document.body.classList.add("fn-water-debug-on");
+                drawDebug();
+                return;
+            }
+
             if (!(event.shiftKey && event.key.toLowerCase() === "d")) return;
             debugEnabled = !debugEnabled;
             document.body.classList.toggle("fn-water-debug-on", debugEnabled);

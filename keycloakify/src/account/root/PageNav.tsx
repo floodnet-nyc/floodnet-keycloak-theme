@@ -56,6 +56,7 @@ const icons: Record<string, ReactNode> = {
     organizations: <BuildingIcon />,
     resources: <KeyIcon />,
     verifiableCredentials: <IdBadgeIcon />,
+    oid4vci: <IdBadgeIcon />,
     signingIn: <KeyIcon />,
     deviceActivity: <DesktopIcon />,
     linkedAccounts: <LinkIcon />

@@ -146,7 +146,21 @@ html body .pf-v5-c-masthead__brand::after {
 
 html body .pf-v5-c-masthead .pf-v5-c-toolbar {
     --pf-v5-c-toolbar--BackgroundColor: transparent;
+    width: 100%;
     padding-right: 0;
+}
+
+/* Keep the user chip and avatar together on the right at every width. */
+html body .pf-v5-c-masthead .pf-v5-c-toolbar__content-section {
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* PatternFly's overflow menu uses an auto margin to pin itself right; clear it
+ * so the whole right-hand cluster (user chip + avatar) stays together. */
+html body .pf-v5-c-masthead .pf-v5-c-toolbar__item {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
 }
 
 html body .pf-v5-c-masthead .pf-v5-c-menu-toggle:not(.pf-m-plain) {
@@ -162,6 +176,14 @@ html body .pf-v5-c-masthead .pf-v5-c-menu-toggle:not(.pf-m-plain) {
     transition:
         border-color 0.15s ease,
         box-shadow 0.15s ease;
+}
+
+/* PatternFly draws the toggle border with a square ::before overlay; the theme
+ * uses a rounded pill, so drop the overlay and keep the button border. */
+html body .pf-v5-c-masthead .pf-v5-c-menu-toggle::before,
+html body .pf-v5-c-masthead .pf-v5-c-menu-toggle::after {
+    border: 0;
+    border-radius: 999px;
 }
 
 html body .pf-v5-c-masthead .pf-v5-c-menu-toggle:not(.pf-m-plain):hover {
@@ -776,10 +798,6 @@ html body .pf-v5-c-backdrop {
         grid-row: 1;
     }
 
-    html body .pf-v5-c-masthead__content .pf-v5-c-toolbar__content-section {
-        justify-content: flex-end;
-        gap: 10px;
-    }
 
     html body .pf-v5-c-masthead__brand {
         width: max-content;

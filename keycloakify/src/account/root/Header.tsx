@@ -86,7 +86,9 @@ export const Header = () => {
                 src: getAvatarDataUrl(keycloak.idTokenParsed),
                 alt: t("avatar")
             }}
-            toolbarItems={[<ReferrerLink key="link" />]}
+            toolbarItems={
+                environment.referrerUrl ? [<ReferrerLink key="link" />] : []
+            }
         />
     );
 };

@@ -2,9 +2,12 @@ import { useEffect, useRef } from "react";
 
 const SIM_COLS = 120;
 const SIM_STEP = 1 / 60;
-const WAVE_C2 = 0.18;
-const WAVE_C = Math.sqrt(WAVE_C2);
+const BASE_C2 = 0.18;
+const REFERENCE_WIDTH = 1440;
+const MAX_C2 = 0.42;
 const DAMPING = 0.994;
+const TRAIL_RADIUS_PX = 18;
+const HEAD_RADIUS_PX = 30;
 const MAX_SUBSTEPS = 3;
 
 type Grid = {
@@ -13,6 +16,8 @@ type Grid = {
     prev: Float32Array;
     curr: Float32Array;
     next: Float32Array;
+    c2: number;
+    c: number;
 };
 
 /**
@@ -59,12 +64,19 @@ export default function LoginWaterField() {
                 64,
                 Math.min(160, Math.round((SIM_COLS * height) / Math.max(1, width)))
             );
+            const speedScale = Math.max(
+                0.55,
+                Math.min(1.65, REFERENCE_WIDTH / Math.max(1, width))
+            );
+            const c2 = Math.min(MAX_C2, BASE_C2 * speedScale * speedScale);
             grid = {
                 cols: SIM_COLS,
                 rows,
                 prev: new Float32Array(SIM_COLS * rows),
                 curr: new Float32Array(SIM_COLS * rows),
-                next: new Float32Array(SIM_COLS * rows)
+                next: new Float32Array(SIM_COLS * rows),
+                c2,
+                c: Math.sqrt(c2)
             };
             fieldCanvas.width = SIM_COLS;
             fieldCanvas.height = rows;
@@ -85,23 +97,42 @@ export default function LoginWaterField() {
             resetGrid();
         };
 
-        const addDisturbance = (clientX: number, clientY: number, strength: number) => {
+        const addCapsule = (
+            fromX: number,
+            fromY: number,
+            toX: number,
+            toY: number,
+            radius: number,
+            strength: number
+        ) => {
             if (!grid) return;
             const { cols, rows, curr } = grid;
-            const gx = (clientX / width) * (cols - 1);
-            const gy = (clientY / height) * (rows - 1);
-            const radius = 2.0;
-            const reach = Math.ceil(radius * 2.5);
+            const gx0 = (fromX / width) * (cols - 1);
+            const gy0 = (fromY / height) * (rows - 1);
+            const gx1 = (toX / width) * (cols - 1);
+            const gy1 = (toY / height) * (rows - 1);
+            const dx = gx1 - gx0;
+            const dy = gy1 - gy0;
+            const lengthSquared = dx * dx + dy * dy;
+            const reach = Math.ceil(radius * 2.2);
+            const minX = Math.max(1, Math.floor(Math.min(gx0, gx1) - reach));
+            const maxX = Math.min(cols - 2, Math.ceil(Math.max(gx0, gx1) + reach));
+            const minY = Math.max(1, Math.floor(Math.min(gy0, gy1) - reach));
+            const maxY = Math.min(rows - 2, Math.ceil(Math.max(gy0, gy1) + reach));
             const scale = 1 / (2 * radius * radius);
 
-            for (let oy = -reach; oy <= reach; oy += 1) {
-                const y = Math.round(gy) + oy;
-                if (y < 1 || y >= rows - 1) continue;
-                for (let ox = -reach; ox <= reach; ox += 1) {
-                    const x = Math.round(gx) + ox;
-                    if (x < 1 || x >= cols - 1) continue;
-                    const distance = ox * ox + oy * oy;
-                    const falloff = Math.exp(-distance * scale);
+            for (let y = minY; y <= maxY; y += 1) {
+                for (let x = minX; x <= maxX; x += 1) {
+                    let t = 0;
+                    if (lengthSquared > 0.0001) {
+                        t = ((x - gx0) * dx + (y - gy0) * dy) / lengthSquared;
+                        t = Math.max(0, Math.min(1, t));
+                    }
+                    const px = gx0 + dx * t;
+                    const py = gy0 + dy * t;
+                    const distanceSquared = (x - px) * (x - px) + (y - py) * (y - py);
+                    if (distanceSquared > reach * reach) continue;
+                    const falloff = Math.exp(-distanceSquared * scale);
                     curr[y * cols + x] -= falloff * strength;
                 }
             }
@@ -109,7 +140,7 @@ export default function LoginWaterField() {
 
         const stepSimulation = () => {
             if (!grid) return;
-            const { cols, rows, prev, curr, next } = grid;
+            const { cols, rows, prev, curr, next, c2 } = grid;
 
             for (let y = 1; y < rows - 1; y += 1) {
                 const row = y * cols;
@@ -123,7 +154,7 @@ export default function LoginWaterField() {
                     next[index] =
                         (2 * curr[index] -
                             prev[index] +
-                            WAVE_C2 * (neighbours - 4 * curr[index])) *
+                            c2 * (neighbours - 4 * curr[index])) *
                         DAMPING;
                 }
             }
@@ -132,7 +163,7 @@ export default function LoginWaterField() {
             // frame instead of bouncing energy back into the scene. The wave
             // equation is solved on a unit grid, so the Courant number is
             // simply sqrt(c2).
-            const mur = (WAVE_C - 1) / (WAVE_C + 1);
+            const mur = (grid.c - 1) / (grid.c + 1);
             for (let y = 1; y < rows - 1; y += 1) {
                 const row = y * cols;
                 const left = row;
@@ -192,11 +223,11 @@ export default function LoginWaterField() {
                     const pixel = index * 4;
                     // Cool scene light rather than a white overlay: blue-cyan
                     // highlights that screen into the rainy photo.
-                    pixels[pixel] = 64 + Math.round(42 * highlight);
-                    pixels[pixel + 1] = 168 + Math.round(48 * highlight);
-                    pixels[pixel + 2] = 255;
+                    pixels[pixel] = 18 + Math.round(28 * highlight);
+                    pixels[pixel + 1] = 76 + Math.round(58 * highlight);
+                    pixels[pixel + 2] = 220 + Math.round(35 * highlight);
                     pixels[pixel + 3] = Math.round(
-                        255 * Math.min(0.58, Math.pow(glow, 1.4) * 0.47)
+                        255 * Math.min(0.6, Math.pow(glow, 1.4) * 0.5)
                     );
                 }
             }
@@ -278,8 +309,12 @@ export default function LoginWaterField() {
         const stampSegment = (toX: number, toY: number) => {
             if (!grid) return false;
 
+            const cellSize = width / SIM_COLS;
+            const trailRadius = Math.max(2.0, TRAIL_RADIUS_PX / cellSize);
+            const headRadius = Math.max(3.0, HEAD_RADIUS_PX / cellSize);
+
             if (!Number.isFinite(lastStampX) || !Number.isFinite(lastStampY)) {
-                addDisturbance(toX, toY, 0.018);
+                addCapsule(toX, toY, toX, toY, headRadius, 0.022);
                 lastStampX = toX;
                 lastStampY = toY;
                 return true;
@@ -295,26 +330,29 @@ export default function LoginWaterField() {
             if (distance > 420) {
                 lastStampX = toX;
                 lastStampY = toY;
-                addDisturbance(toX, toY, 0.018);
+                addCapsule(toX, toY, toX, toY, headRadius, 0.022);
                 return true;
             }
 
-            // Sample the path at roughly one grid-cell steps so fast swipes
-            // leave a line in the water instead of a row of droplets.
-            const spacing = Math.max(3.2, width / SIM_COLS * 0.85);
-            const steps = Math.max(1, Math.min(120, Math.ceil(distance / spacing)));
-            const stepX = dx / steps;
-            const stepY = dy / steps;
-            const totalStrength = Math.min(0.3, distance * 0.0022);
-            const perStamp = Math.min(0.02, totalStrength / steps);
+            const speed = Math.min(1, distance / 90);
+            const trailStrength = Math.min(0.045, 0.014 + distance / 1500);
+            const headStrength = Math.min(0.08, 0.025 + distance / 1000);
+            const vx = dx / Math.max(1, distance);
+            const vy = dy / Math.max(1, distance);
+            const lead = Math.min(24, distance * 0.35);
 
-            for (let step = 1; step <= steps; step += 1) {
-                addDisturbance(
-                    lastStampX + stepX * step,
-                    lastStampY + stepY * step,
-                    perStamp
-                );
-            }
+            // A continuous capsule along the path plus a softer, larger head
+            // just ahead of the pointer. The moving depression makes the wake;
+            // the head gives the wavefront a leading crest.
+            addCapsule(lastStampX, lastStampY, toX, toY, trailRadius, trailStrength);
+            addCapsule(
+                toX + vx * lead,
+                toY + vy * lead,
+                toX + vx * lead,
+                toY + vy * lead,
+                headRadius * (0.9 + speed * 0.28),
+                headStrength
+            );
 
             lastStampX = toX;
             lastStampY = toY;

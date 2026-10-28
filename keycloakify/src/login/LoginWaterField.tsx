@@ -9,6 +9,7 @@ const DAMPING = 0.980;
 const TRAIL_RADIUS_PX = 20;
 const DEBUG_FADE_MS = 800;
 const RAW_FIELD_SCALE = 0.15;
+const HEIGHT_COLOR_SCALE = 0.2;
 
 // Two-light palettes for the caustics. The key comes from the upper left,
 // the fill from the lower right. Add or tune entries here.
@@ -118,6 +119,7 @@ export default function LoginWaterField() {
         let frame = 0;
         let lastFrameTime = 0;
         let accumulator = 0;
+        let colorByHeight = true;
         let pendingFromX = Number.NaN;
         let pendingFromY = Number.NaN;
         let pendingToX = Number.NaN;
@@ -421,6 +423,31 @@ export default function LoginWaterField() {
                     const height = curr[index];
                     const dx = curr[index + 1] - curr[index - 1];
                     const dy = curr[index + cols] - curr[index - cols];
+                    if (colorByHeight) {
+                        const value = Math.max(
+                            -1,
+                            Math.min(1, height / HEIGHT_COLOR_SCALE)
+                        );
+                        const magnitude = Math.abs(value);
+                        if (magnitude < 0.018) continue;
+                        const color = value >= 0 ? PALETTE.key : PALETTE.fill;
+                        const lift = 0.65 + 0.35 * magnitude;
+                        const pixel = index * 4;
+                        pixels[pixel] = Math.min(255, Math.round(color[0] * lift));
+                        pixels[pixel + 1] = Math.min(
+                            255,
+                            Math.round(color[1] * lift)
+                        );
+                        pixels[pixel + 2] = Math.min(
+                            255,
+                            Math.round(color[2] * lift)
+                        );
+                        pixels[pixel + 3] = Math.round(
+                            255 * Math.min(0.6, Math.pow(magnitude, 0.9) * 0.55)
+                        );
+                        continue;
+                    }
+
                     const keyLight = Math.max(0, dx * 0.9 + dy * 0.4);
                     const fillLight = Math.max(0, -dx * 0.9 - dy * 0.4);
                     const rawKey = keyLight * 42 + Math.max(0, height) * 0.5;
@@ -715,6 +742,13 @@ export default function LoginWaterField() {
         };
 
         const onKeyDown = (event: KeyboardEvent) => {
+            if (event.shiftKey && event.key.toLowerCase() === "h") {
+                colorByHeight = !colorByHeight;
+                if (grid) render();
+                if (debugEnabled) drawDebug();
+                return;
+            }
+
             if (event.shiftKey && event.key.toLowerCase() === "f") {
                 debugFieldMode = !debugFieldMode;
                 debugEnabled = true;

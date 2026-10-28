@@ -836,18 +836,238 @@ html body .fn-page__surface .pf-v5-c-data-list__item {
 }
 
 html body .fn-page__surface .pf-v5-c-data-list__item-row {
-    padding: 16px 0;
+    padding: 0;
 }
 
 html body .fn-page__surface .pf-v5-c-data-list__cell {
-    padding-top: 0;
-    padding-bottom: 0;
+    padding: 14px 16px;
     color: var(--fn-ink);
+    font-size: 0.9rem;
+}
+
+/* Give every list a quiet editorial header band. */
+html body .fn-page__surface .pf-v5-c-data-list__item[id$="-header"],
+html body .fn-page__surface .pf-v5-c-data-list__item[id$="-columns-names"] {
+    background-color: var(--fn-paper);
+    border-bottom: 1px solid var(--fn-line);
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__item[id$="-header"] .pf-v5-c-data-list__cell,
+html body .fn-page__surface .pf-v5-c-data-list__item[id$="-columns-names"] .pf-v5-c-data-list__cell {
+    padding: 11px 16px;
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__item[id$="-header"] strong,
+html body .fn-page__surface .pf-v5-c-data-list__item[id$="-columns-names"] strong {
+    display: block;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fn-muted);
+}
+
+html body .fn-page__surface li.pf-v5-c-data-list__item:not([id$="-header"]):not([id$="-columns-names"]):hover {
+    background-color: rgba(106, 255, 211, 0.06);
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__item-control {
+    padding: 0 8px 0 16px;
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__toggle .pf-v5-c-button {
+    color: var(--fn-muted);
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__toggle .pf-v5-c-button:hover {
+    color: var(--fn-ink);
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__cell .pf-v5-c-button.pf-m-link {
+    padding: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--fn-teal);
+    text-transform: none;
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__cell .pf-v5-c-button.pf-m-link .pf-v5-svg {
+    width: 0.7em;
+    height: 0.7em;
+    margin-left: 0.4rem;
 }
 
 html body .fn-page__surface .pf-v5-c-data-list__item.pf-m-expanded {
     background-color: var(--fn-paper);
     border-radius: 14px;
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__expandable-content {
+    background-color: var(--fn-paper);
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__expandable-content-body {
+    padding: 18px 24px;
+}
+
+html body .fn-page__surface .pf-v5-c-check__input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--fn-teal);
+}
+
+html body .fn-page__surface .pf-v5-c-check__label {
+    font-size: 0.85rem;
+    color: var(--fn-ink);
+}
+
+/* Tables used by Resources. */
+html body .fn-page__surface .pf-v5-c-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+html body .fn-page__surface .pf-v5-c-table thead th {
+    padding: 12px 16px;
+    font-family: var(--fn-sans);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--fn-muted);
+    background-color: var(--fn-paper);
+    border-bottom: 1px solid var(--fn-line);
+}
+
+html body .fn-page__surface .pf-v5-c-table tbody td,
+html body .fn-page__surface .pf-v5-c-table tbody th {
+    padding: 14px 16px;
+    font-size: 0.9rem;
+    color: var(--fn-ink);
+    border-bottom: 1px solid var(--fn-line);
+}
+
+html body .fn-page__surface .pf-v5-c-table tbody tr:hover {
+    background-color: rgba(106, 255, 211, 0.06);
+}
+
+/* Tabs on Resources. */
+html body .fn-page__surface .pf-v5-c-tabs__list {
+    border-bottom: 1px solid var(--fn-line);
+}
+
+html body .fn-page__surface .pf-v5-c-tabs__item + .pf-v5-c-tabs__item {
+    margin-left: 24px;
+}
+
+html body .fn-page__surface .pf-v5-c-tabs__link {
+    padding: 10px 0;
+    font-family: var(--fn-sans);
+    font-size: 0.88rem;
+    color: var(--fn-muted);
+}
+
+html body .fn-page__surface .pf-v5-c-tabs__item.pf-m-current .pf-v5-c-tabs__link {
+    color: var(--fn-ink);
+    font-weight: 600;
+}
+
+html body .fn-page__surface .pf-v5-c-tabs__item.pf-m-current .pf-v5-c-tabs__link::after {
+    border-bottom-color: var(--fn-teal);
+}
+
+/* Search control on Resources. */
+html body .fn-page__surface .pf-v5-c-text-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 220px;
+    height: 40px;
+    padding: 0 0.65rem 0 2rem;
+    background-color: #ffffff;
+    border: 1px solid var(--fn-line-strong);
+    border-radius: 10px 0 0 10px;
+}
+
+html body .fn-page__surface .pf-v5-c-text-input-group__text {
+    flex: 1;
+    width: 100%;
+}
+
+html body .fn-page__surface .pf-v5-c-text-input-group__text-input {
+    width: 100%;
+    height: 38px;
+    padding: 0 0.4rem;
+    font-family: var(--fn-sans);
+    font-size: 0.88rem;
+    color: var(--fn-ink);
+    background: transparent;
+    border: 0;
+    outline: none;
+}
+
+html body .fn-page__surface .pf-v5-c-text-input-group__icon {
+    position: absolute;
+    top: 50%;
+    left: 0.7rem;
+    margin: 0;
+    transform: translateY(-50%);
+    color: var(--fn-muted);
+}
+
+html body .fn-page__surface .pf-v5-c-text-input-group:focus-within {
+    border-color: var(--fn-teal);
+    box-shadow: 0 0 0 3px rgba(12, 122, 104, 0.12);
+}
+
+html body .fn-page__surface .pf-v5-c-input-group > .pf-v5-c-input-group__item:last-child .pf-v5-c-button.pf-m-control {
+    height: 40px;
+    min-height: 40px;
+    border: 1px solid var(--fn-line-strong);
+    border-left: 0;
+    border-radius: 0 10px 10px 0;
+    background-color: var(--fn-surface);
+    color: var(--fn-muted);
+}
+
+html body .fn-page__surface .pf-v5-c-pagination,
+html body .fn-page__surface .pf-v5-c-pagination__total-items {
+    font-size: 0.82rem;
+    color: var(--fn-muted);
+}
+
+/* Empty states. */
+html body .fn-page__surface .pf-v5-c-empty-state {
+    min-height: 320px;
+}
+
+html body .fn-page__surface .pf-v5-c-empty-state__icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background-color: var(--fn-mint-soft);
+    color: var(--fn-teal-deep);
+}
+
+html body .fn-page__surface .pf-v5-c-empty-state__icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+html body .fn-page__surface .pf-v5-c-empty-state__title-text {
+    font-family: var(--fn-serif);
+    font-size: 1.45rem;
+    font-weight: 600;
+    color: var(--fn-ink);
+}
+
+html body .fn-page__surface .pf-v5-c-empty-state__body {
+    font-size: 0.95rem;
+    color: var(--fn-muted);
 }
 
 html body .pf-v5-c-description-list__term {

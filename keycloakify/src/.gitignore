@@ -3,6 +3,7 @@
 # === Owned files start ===
 # account/colorScheme.ts
 # account/KcAccountUi.tsx
+# account/applications/Applications.tsx
 # account/assets/content.ts
 # account/root/Header.tsx
 # account/root/PageNav.tsx
@@ -100,7 +101,6 @@
 /account/api/parse-response.ts
 /account/api/representations.ts
 /account/api/request.ts
-/account/applications/Applications.tsx
 /account/assets/favicon.svg
 /account/assets/logo.svg
 /account/content/ContentComponent.tsx

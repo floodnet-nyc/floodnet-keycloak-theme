@@ -7,26 +7,16 @@ const REFERENCE_WIDTH = 1440;
 const MAX_C2 = 0.42;
 const DAMPING = 0.994;
 const TRAIL_RADIUS_PX = 18;
-const HEAD_RADIUS_PX = 30;
 const MAX_SUBSTEPS = 3;
 
-type DebugShape =
-    | {
-          kind: "trail";
-          x0: number;
-          y0: number;
-          x1: number;
-          y1: number;
-          radius: number;
-          born: number;
-      }
-    | {
-          kind: "head";
-          x: number;
-          y: number;
-          radius: number;
-          born: number;
-      };
+type DebugShape = {
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+    radius: number;
+    born: number;
+};
 
 type Grid = {
     cols: number;
@@ -146,48 +136,26 @@ export default function LoginWaterField() {
                 const alpha = ageAlpha * recency;
                 if (alpha <= 0.02) continue;
 
-                if (shape.kind === "trail") {
-                    debugContext.beginPath();
-                    debugContext.moveTo(shape.x0, shape.y0);
-                    debugContext.lineTo(shape.x1, shape.y1);
-                    debugContext.lineWidth = Math.max(2, shape.radius * 2);
-                    debugContext.strokeStyle = `rgba(255, 60, 170, ${alpha * 0.28})`;
-                    debugContext.stroke();
-                    debugContext.lineWidth = 1.4;
-                    debugContext.strokeStyle = `rgba(255, 120, 205, ${alpha * 0.9})`;
-                    debugContext.stroke();
-                } else {
-                    debugContext.beginPath();
-                    debugContext.arc(shape.x, shape.y, shape.radius, 0, Math.PI * 2);
-                    debugContext.fillStyle = `rgba(70, 255, 165, ${alpha * 0.12})`;
-                    debugContext.fill();
-                    debugContext.lineWidth = 1.6;
-                    debugContext.strokeStyle = `rgba(95, 255, 185, ${alpha * 0.9})`;
-                    debugContext.stroke();
-                    debugContext.beginPath();
-                    debugContext.moveTo(shape.x - 4, shape.y);
-                    debugContext.lineTo(shape.x + 4, shape.y);
-                    debugContext.moveTo(shape.x, shape.y - 4);
-                    debugContext.lineTo(shape.x, shape.y + 4);
-                    debugContext.stroke();
-                }
+                debugContext.beginPath();
+                debugContext.moveTo(shape.x0, shape.y0);
+                debugContext.lineTo(shape.x1, shape.y1);
+                debugContext.lineWidth = Math.max(2, shape.radius * 2);
+                debugContext.strokeStyle = `rgba(255, 60, 170, ${alpha * 0.28})`;
+                debugContext.stroke();
+                debugContext.lineWidth = 1.4;
+                debugContext.strokeStyle = `rgba(255, 120, 205, ${alpha * 0.9})`;
+                debugContext.stroke();
             }
 
             // Legend
             debugContext.fillStyle = "rgba(4, 16, 26, 0.78)";
-            debugContext.fillRect(16, 16, 320, 86);
+            debugContext.fillRect(16, 16, 300, 62);
             debugContext.fillStyle = "rgba(255, 120, 205, 1)";
-            debugContext.fillRect(28, 30, 18, 4);
-            debugContext.fillStyle = "rgba(95, 255, 185, 1)";
-            debugContext.beginPath();
-            debugContext.arc(37, 56, 6, 0, Math.PI * 2);
-            debugContext.strokeStyle = "rgba(95, 255, 185, 1)";
-            debugContext.stroke();
+            debugContext.fillRect(28, 33, 18, 4);
             debugContext.fillStyle = "rgba(235, 250, 255, 0.92)";
             debugContext.font = "12px system-ui, sans-serif";
-            debugContext.fillText("trail capsule (magenta)", 54, 38);
-            debugContext.fillText("leading head (green)", 54, 61);
-            debugContext.fillText("Shift+D toggles this overlay", 28, 84);
+            debugContext.fillText("trail capsule only", 54, 39);
+            debugContext.fillText("Shift+D toggles this overlay", 28, 62);
             debugContext.restore();
         };
 
@@ -199,20 +167,7 @@ export default function LoginWaterField() {
             radius: number
         ) => {
             if (!debugEnabled) return;
-            debugShapes.push({
-                kind: "trail",
-                x0,
-                y0,
-                x1,
-                y1,
-                radius,
-                born: performance.now()
-            });
-        };
-
-        const recordDebugHead = (x: number, y: number, radius: number) => {
-            if (!debugEnabled) return;
-            debugShapes.push({ kind: "head", x, y, radius, born: performance.now() });
+            debugShapes.push({ x0, y0, x1, y1, radius, born: performance.now() });
         };
 
         const trimDebugShapes = () => {
@@ -435,11 +390,11 @@ export default function LoginWaterField() {
 
             const cellSize = width / SIM_COLS;
             const trailRadius = Math.max(2.0, TRAIL_RADIUS_PX / cellSize);
-            const headRadius = Math.max(3.0, HEAD_RADIUS_PX / cellSize);
+            const pointStrength = 0.014;
 
             if (!Number.isFinite(lastStampX) || !Number.isFinite(lastStampY)) {
-                addCapsule(toX, toY, toX, toY, headRadius, 0.022);
-                recordDebugHead(toX, toY, headRadius * cellSize);
+                addCapsule(toX, toY, toX, toY, trailRadius, pointStrength);
+                recordDebugTrail(toX, toY, toX, toY, trailRadius * cellSize);
                 trimDebugShapes();
                 lastStampX = toX;
                 lastStampY = toY;
@@ -456,43 +411,20 @@ export default function LoginWaterField() {
             if (distance > 420) {
                 lastStampX = toX;
                 lastStampY = toY;
-                addCapsule(toX, toY, toX, toY, headRadius, 0.022);
-                recordDebugHead(toX, toY, headRadius * cellSize);
+                addCapsule(toX, toY, toX, toY, trailRadius, pointStrength);
+                recordDebugTrail(toX, toY, toX, toY, trailRadius * cellSize);
                 trimDebugShapes();
                 return true;
             }
 
-            const speed = Math.min(1, distance / 90);
-            const trailStrength = Math.min(0.045, 0.014 + distance / 1500);
-            const headStrength = Math.min(0.08, 0.025 + distance / 1000);
-            const vx = dx / Math.max(1, distance);
-            const vy = dy / Math.max(1, distance);
-            const lead = Math.min(24, distance * 0.35);
-
-            // A continuous capsule along the path plus a softer, larger head
-            // just ahead of the pointer. The moving depression makes the wake;
-            // the head gives the wavefront a leading crest.
+            const trailStrength = Math.min(0.05, 0.018 + distance / 1400);
             addCapsule(lastStampX, lastStampY, toX, toY, trailRadius, trailStrength);
-            addCapsule(
-                toX + vx * lead,
-                toY + vy * lead,
-                toX + vx * lead,
-                toY + vy * lead,
-                headRadius * (0.9 + speed * 0.28),
-                headStrength
-            );
-
             recordDebugTrail(
                 lastStampX,
                 lastStampY,
                 toX,
                 toY,
-                trailRadius * (width / SIM_COLS)
-            );
-            recordDebugHead(
-                toX + vx * lead,
-                toY + vy * lead,
-                headRadius * (0.9 + speed * 0.28) * (width / SIM_COLS)
+                trailRadius * cellSize
             );
             trimDebugShapes();
 

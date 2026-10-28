@@ -70,9 +70,68 @@ function CatchAllRedirect() {
     return <Navigate to="." replace />;
 }
 
+const NAV_COLLAPSED_STORAGE_KEY = "floodnet.account.navCollapsed";
+
 export const Root = () => {
     const context = useEnvironment<AccountEnvironment>();
     const [content, setContent] = useState<RouteObject[]>();
+
+    useEffect(() => {
+        // Remember the desktop rail state across reloads.
+        const mediaQuery = window.matchMedia("(min-width: 1200px)");
+        let observer: MutationObserver | undefined;
+        let timer: number | undefined;
+
+        const initialize = () => {
+            const sidebar = document.querySelector<HTMLElement>(
+                ".pf-v5-c-page__sidebar"
+            );
+
+            if (!sidebar) {
+                return false;
+            }
+
+            if (
+                mediaQuery.matches &&
+                window.localStorage.getItem(NAV_COLLAPSED_STORAGE_KEY) === "1" &&
+                sidebar.classList.contains("pf-m-expanded")
+            ) {
+                document.getElementById("nav-toggle")?.click();
+            }
+
+            observer = new MutationObserver(() => {
+                if (!mediaQuery.matches) {
+                    return;
+                }
+
+                window.localStorage.setItem(
+                    NAV_COLLAPSED_STORAGE_KEY,
+                    sidebar.classList.contains("pf-m-collapsed") ? "1" : "0"
+                );
+            });
+            observer.observe(sidebar, {
+                attributes: true,
+                attributeFilter: ["class"]
+            });
+
+            return true;
+        };
+
+        if (!initialize()) {
+            timer = window.setInterval(() => {
+                if (initialize()) {
+                    window.clearInterval(timer);
+                }
+            }, 50);
+        }
+
+        return () => {
+            observer?.disconnect();
+            if (timer !== undefined) {
+                window.clearInterval(timer);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         // The sidebar is an off-canvas drawer below the xl breakpoint. Close it

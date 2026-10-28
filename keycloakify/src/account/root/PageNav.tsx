@@ -187,7 +187,7 @@ export const NavLink = ({
         <a
             data-testid={path}
             href={href}
-            title={label}
+            data-label={label}
             aria-label={label}
             aria-current={isActive ? "page" : undefined}
             className={`fn-nav__link${isActive ? " fn-nav__link--active" : ""}`}

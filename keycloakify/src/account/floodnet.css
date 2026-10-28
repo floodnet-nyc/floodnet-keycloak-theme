@@ -921,6 +921,89 @@ html body .fn-page__surface .pf-v5-l-split:has([data-testid$="/help-text"]) [dat
     color: var(--fn-muted);
 }
 
+/* Credential sections with a create action (e.g. authenticator app). */
+html body .fn-page__surface .pf-v5-l-split:has(.pf-v5-c-button) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+html body .fn-page__surface .pf-v5-l-split:has(.pf-v5-c-button) .pf-v5-l-split__item:first-child {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+html body .fn-page__surface .pf-v5-l-split:has(.pf-v5-c-button) .pf-v5-l-split__item.pf-m-fill {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+}
+
+html body .fn-page__surface .pf-v5-l-split:has(.pf-v5-c-button) .pf-v5-u-float-right {
+    float: none;
+}
+
+html body .fn-page__surface .pf-v5-c-button[data-testid$="/create"] {
+    min-height: 36px;
+    padding-block: 0 !important;
+    padding-inline: 16px !important;
+    border: 1px solid rgba(12, 122, 104, 0.3);
+    border-radius: 999px;
+    background-color: transparent;
+    color: var(--fn-teal-deep);
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+html body .fn-page__surface .pf-v5-c-button[data-testid$="/create"]:hover {
+    background-color: var(--fn-mint-soft);
+    border-color: var(--fn-teal);
+}
+
+/* "Not set up" credential rows read as an empty slot, not a stray line. */
+html body .fn-page__surface .pf-v5-c-data-list__item:has([data-testid$="/not-set-up"]) {
+    display: block;
+    border: 1px dashed var(--fn-line-strong);
+    border-radius: 12px;
+    background-color: var(--fn-paper);
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__item:has([data-testid$="/not-set-up"]) .pf-v5-c-data-list__item-content {
+    width: 100%;
+    justify-content: flex-start;
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__item:has([data-testid$="/not-set-up"]) .pf-v5-c-data-list__cell {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 18px 20px;
+    font-size: 0.88rem;
+    color: var(--fn-muted);
+}
+
+html body .fn-page__surface .pf-v5-c-data-list__item:has([data-testid$="/not-set-up"]) .pf-v5-c-data-list__cell::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    border: 1px solid var(--fn-line-strong);
+    border-radius: 50%;
+    background-image:
+        linear-gradient(var(--fn-muted), var(--fn-muted)),
+        linear-gradient(var(--fn-muted), var(--fn-muted));
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size:
+        8px 1px,
+        1px 8px;
+    opacity: 0.8;
+}
+
 /* Application status pills. */
 .fn-status-pill {
     display: inline-flex;

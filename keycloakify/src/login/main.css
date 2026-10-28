@@ -76,8 +76,8 @@ body.kcBodyClass .login-pf-page {
     height: 100%;
     pointer-events: none;
     mix-blend-mode: multiply;
-    opacity: 0.45;
-    filter: blur(5.2px) saturate(1.05);
+    opacity: 0.25;
+    /* filter: blur(5.2px) saturate(1.05); */
 }
 
 @media (prefers-reduced-motion: reduce), (pointer: coarse) {

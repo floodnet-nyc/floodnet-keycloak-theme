@@ -2,14 +2,21 @@ import { useEffect, useRef } from "react";
 
 const SIM_COLS = 120;
 const SIM_STEP = 1 / 60;
-const BASE_C2 = 0.12;
+const BASE_C2 = 0.08;
 const REFERENCE_WIDTH = 1440;
 const MAX_C2 = 0.42;
-const DAMPING = 0.990;
+const DAMPING = 0.985;
 const TRAIL_RADIUS_PX = 18;
 
 // Two-light palettes for the caustics. The key comes from the upper left,
 // the fill from the lower right. Add or tune entries here.
+const hex2rgb = (hex: string): [number, number, number] => {
+    const bigint = parseInt(hex.slice(1), 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return [r, g, b];
+};
 const PALETTES = {
     ultraviolet: {
         key: [255, 122, 217] as const,
@@ -29,8 +36,8 @@ const PALETTES = {
     },
     puddle: {
         // soft blue #5ba8c2 (puddle), fill = deep blue #0047ab (water)
-        key: [91, 168, 194] as const,
-        fill: [0, 71, 171] as const
+        key: hex2rgb("#2f3762"),
+        fill: hex2rgb("#00193b")
     },
     dusk: {
         // warm peach #ff8f3e (streetlights), fill = violet-blue #003cef (rainy dusk)
@@ -40,7 +47,7 @@ const PALETTES = {
 } as const;
 
 // Change this one line to preview a palette.
-const ACTIVE_PALETTE: keyof typeof PALETTES = "ultraviolet";
+const ACTIVE_PALETTE: keyof typeof PALETTES = "puddle";
 const PALETTE = PALETTES[ACTIVE_PALETTE];
 const MAX_SUBSTEPS = 3;
 

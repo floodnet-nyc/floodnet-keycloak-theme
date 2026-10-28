@@ -5,10 +5,10 @@ const SIM_STEP = 1 / 60;
 const BASE_C2 = 0.02;
 const REFERENCE_WIDTH = 1440;
 const MAX_C2 = 0.42;
-const DAMPING = 0.982;
+const DAMPING = 0.980;
 const TRAIL_RADIUS_PX = 18;
 const DEBUG_FADE_MS = 800;
-const RAW_FIELD_SCALE = 0.45;
+const RAW_FIELD_SCALE = 0.85;
 
 // Two-light palettes for the caustics. The key comes from the upper left,
 // the fill from the lower right. Add or tune entries here.
@@ -582,18 +582,33 @@ export default function LoginWaterField() {
             const rawSpeed = distance / elapsed; // CSS pixels per millisecond
             smoothedSpeed += (Math.min(2.5, rawSpeed) - smoothedSpeed) * 0.22;
 
+            const waveSpeedPxPerMs =
+                (Math.sqrt(grid.c2) * cellSize * 60) / 1000;
+            const speedRatio = rawSpeed / Math.max(0.0001, waveSpeedPxPerMs);
+            const attenuation = 1 / (1 + Math.max(0, speedRatio - 1) * 0.9);
+
+            // Do not let a single simulation step force the whole jump and
+            // become a supersonic line source. Only the last portion of the
+            // pointer movement contributes, and fast movement is attenuated.
+            const maxForcedDistance = Math.max(10, cellSize * 1.4);
+            const appliedDistance = Math.min(distance, maxForcedDistance);
+            const vx = dx / distance;
+            const vy = dy / distance;
+            const fromX = pendingToX - vx * appliedDistance;
+            const fromY = pendingToY - vy * appliedDistance;
+
             const speedScale = 1 + Math.min(1.05, smoothedSpeed * 0.65);
             const headRadius = Math.max(2.0, (TRAIL_RADIUS_PX * speedScale) / cellSize);
             const tailRadius = Math.max(1.5, headRadius * 0.45);
-            // Bias the displacement toward the leading edge and use less energy
-            // overall, so a fast drag leaves a bow wave rather than a long
-            // line-source pulse train.
-            const headStrength = Math.min(0.075, distance * 0.0018);
+            const headStrength = Math.min(
+                0.075,
+                appliedDistance * 0.0018 * attenuation
+            );
             const tailStrength = headStrength * 0.18;
 
             addCapsule(
-                pendingFromX,
-                pendingFromY,
+                fromX,
+                fromY,
                 pendingToX,
                 pendingToY,
                 tailRadius,
@@ -602,8 +617,8 @@ export default function LoginWaterField() {
                 headStrength
             );
             recordDebugTrail(
-                pendingFromX,
-                pendingFromY,
+                fromX,
+                fromY,
                 pendingToX,
                 pendingToY,
                 tailRadius * cellSize,

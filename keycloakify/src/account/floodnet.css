@@ -243,8 +243,9 @@ html body .pf-v5-c-page__sidebar-body {
     border-radius: 26px;
     padding: 22px 14px 18px;
     box-shadow: 0 40px 80px -52px rgba(9, 22, 32, 0.65);
-    overflow-y: auto;
+    overflow: hidden auto;
     height: 100%;
+    min-width: 0;
 }
 
 html body .pf-v5-c-page__main {
@@ -269,10 +270,15 @@ html body .pf-v5-c-page__main > .fn-page {
     display: flex;
     flex-direction: column;
     min-height: 100%;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .fn-nav__label {
     margin: 0 0 14px 12px;
+    white-space: nowrap;
+    overflow: hidden;
     font-size: 0.62rem;
     font-weight: 700;
     letter-spacing: 0.2em;
@@ -288,6 +294,7 @@ html body .pf-v5-c-page__main > .fn-page {
     display: flex;
     flex-direction: column;
     gap: 3px;
+    min-width: 0;
 }
 
 .fn-nav__link {
@@ -334,6 +341,21 @@ html body .pf-v5-c-page__main > .fn-page {
     fill: currentColor;
 }
 
+/* Keep labels on one line while the rail shrinks/grows; clip instead of
+ * wrapping so the layout doesn't reflow mid-animation. */
+.fn-nav__text {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+}
+
+.fn-nav__link {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
 .fn-nav__dot {
     flex: 0 0 5px;
     width: 5px;
@@ -350,6 +372,8 @@ html body .pf-v5-c-page__main > .fn-page {
 
 .fn-nav__group-label {
     margin: 0 0 6px 12px;
+    white-space: nowrap;
+    overflow: hidden;
     font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.16em;
@@ -371,6 +395,8 @@ html body .pf-v5-c-page__main > .fn-page {
 
 .fn-nav__footer {
     margin: auto 0 0;
+    white-space: nowrap;
+    overflow: hidden;
     padding: 16px 12px 2px;
     font-size: 0.66rem;
     letter-spacing: 0.12em;
@@ -821,13 +847,31 @@ html body .pf-v5-c-backdrop {
 /* Collapsed rail (desktop): keep the ink card as a 76px icon strip instead of
  * clipping it to a dark sliver. */
 @media (min-width: 1200px) {
+    /* Animate the page grid track itself (Chrome/Safari can interpolate
+     * 290px -> 76px when both tracks use the same 1fr syntax). */
+    html body .pf-v5-c-page {
+        grid-template-columns: 290px 1fr;
+        transition: grid-template-columns 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
     html body .pf-v5-c-page:has(> .pf-v5-c-page__sidebar.pf-m-collapsed) {
-        grid-template-columns: 76px minmax(0, 1fr);
+        grid-template-columns: 76px 1fr;
+    }
+
+    html body .pf-v5-c-page__sidebar {
+        transition: padding 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Fill the animated column instead of PatternFly's clamped 0/50px. */
+    /* Let the sidebar fill the animated grid track instead of PatternFly
+     * pinning it to 290px (expanded) / 50px (collapsed). */
+    html body .pf-v5-c-page__sidebar {
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0;
     }
 
     html body .pf-v5-c-page__sidebar.pf-m-collapsed {
-        width: 76px !important;
-        max-width: 76px !important;
         padding: 24px 8px 28px !important;
         overflow: visible !important;
     }
@@ -836,6 +880,9 @@ html body .pf-v5-c-backdrop {
         padding: 12px 8px !important;
         border-radius: 20px !important;
         overflow-y: auto !important;
+        transition:
+            padding 300ms cubic-bezier(0.4, 0, 0.2, 1),
+            border-radius 300ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     html body .pf-v5-c-page__sidebar.pf-m-collapsed .fn-nav__label,

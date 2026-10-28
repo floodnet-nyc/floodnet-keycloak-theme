@@ -75,7 +75,8 @@ body.kcBodyClass .login-pf-page {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    opacity: 0.78;
+    opacity: 0.95;
+    filter: blur(2.6px);
 }
 
 @media (prefers-reduced-motion: reduce), (pointer: coarse) {

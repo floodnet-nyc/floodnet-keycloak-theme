@@ -3,19 +3,25 @@ import { useEffect, useRef } from "react";
 type Ripple = {
     x: number;
     y: number;
+    vx: number;
+    vy: number;
     born: number;
     life: number;
     radius: number;
     strength: number;
+    angle: number;
+    speed: number;
 };
 
+const MAX_RIPPLES = 6;
+
 /**
- * A restrained water-ripple layer for the initial sign-in page.
+ * A quiet water-surface layer for the initial sign-in page.
  *
- * This is intentionally not a fluid simulation: it is a few soft rings over
- * the flood photo, behind the glass card. It only runs for fine pointers, it
- * stops as soon as the last ring fades, and it is disabled for people who ask
- * for reduced motion.
+ * The rings are drawn from a soft pre-rendered sprite, not crisp strokes, so
+ * they dissolve into the photo instead of reading as discrete particles.
+ * It only runs for fine pointers, stops when the last ring fades, and is
+ * disabled for reduced-motion users.
  */
 export default function LoginRipples() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -30,6 +36,32 @@ export default function LoginRipples() {
 
         const context = canvas.getContext("2d");
         if (!context) return;
+
+        // A very soft two-ring sprite, blurred at draw time by the CSS layer.
+        const sprite = document.createElement("canvas");
+        sprite.width = 256;
+        sprite.height = 256;
+        const spriteContext = sprite.getContext("2d");
+        if (!spriteContext) return;
+
+        const glow = spriteContext.createRadialGradient(128, 128, 0, 128, 128, 128);
+        const stops: Array<[number, string]> = [
+            [0, "rgba(176, 255, 235, 0)"],
+            [0.48, "rgba(176, 255, 235, 0)"],
+            [0.57, "rgba(184, 255, 240, 0.05)"],
+            [0.63, "rgba(196, 255, 243, 0.3)"],
+            [0.68, "rgba(220, 255, 248, 0.82)"],
+            [0.73, "rgba(188, 255, 240, 0.24)"],
+            [0.77, "rgba(176, 255, 235, 0)"],
+            [0.81, "rgba(176, 255, 235, 0)"],
+            [0.84, "rgba(190, 255, 238, 0.14)"],
+            [0.88, "rgba(176, 255, 235, 0.03)"],
+            [1, "rgba(176, 255, 235, 0)"]
+        ];
+        for (const [offset, color] of stops) glow.addColorStop(offset, color);
+        spriteContext.fillStyle = glow;
+        spriteContext.fillRect(0, 0, 256, 256);
+
 
         let width = 0;
         let height = 0;
@@ -67,43 +99,26 @@ export default function LoginRipples() {
             ripples = visible;
             context.save();
             context.globalCompositeOperation = "screen";
-            context.lineCap = "round";
 
             for (const ripple of ripples) {
                 const progress = Math.min(1, (now - ripple.born) / ripple.life);
-                const eased = 1 - (1 - progress) * (1 - progress);
-                const radius = ripple.radius * eased;
-                const fade = (1 - progress) * (1 - progress);
-                const alpha = fade * 0.26 * ripple.strength;
+                // Smoothstep: starts and ends slowly, so it never feels launched.
+                const eased = progress * progress * (3 - 2 * progress);
+                const size = Math.max(2, ripple.radius * eased * 2);
+                const fade = Math.pow(1 - progress, 1.7);
+                const drift = progress * 20;
+                const stretch = 1 + Math.min(0.32, ripple.speed * 0.24) * eased;
 
-                const ringOffsets = [0, 4, 9];
-                const ringAlphas = [1, 0.5, 0.28];
-                for (let ring = 0; ring < 3; ring += 1) {
-                    const ringRadius = radius - ringOffsets[ring];
-                    if (ringRadius <= 0) continue;
-                    context.beginPath();
-                    context.arc(ripple.x, ripple.y, ringRadius, 0, Math.PI * 2);
-                    context.lineWidth = Math.max(0.6, 1.3 - ring * 0.35);
-                    context.strokeStyle = `rgba(194, 245, 255, ${alpha * ringAlphas[ring]})`;
-                    context.stroke();
-                }
-
-                if (progress < 0.45) {
-                    const glow = context.createRadialGradient(
-                        ripple.x,
-                        ripple.y,
-                        0,
-                        ripple.x,
-                        ripple.y,
-                        Math.max(1, radius * 0.55)
-                    );
-                    glow.addColorStop(0, `rgba(224, 255, 255, ${alpha * 0.35})`);
-                    glow.addColorStop(1, "rgba(224, 255, 255, 0)");
-                    context.fillStyle = glow;
-                    context.beginPath();
-                    context.arc(ripple.x, ripple.y, Math.max(1, radius * 0.55), 0, Math.PI * 2);
-                    context.fill();
-                }
+                context.save();
+                context.translate(
+                    ripple.x + ripple.vx * drift,
+                    ripple.y + ripple.vy * drift
+                );
+                context.rotate(ripple.angle);
+                context.scale(stretch, 1);
+                context.globalAlpha = fade * ripple.strength * 0.95;
+                context.drawImage(sprite, -size / 2, -size / 2, size, size);
+                context.restore();
             }
 
             context.restore();
@@ -116,16 +131,26 @@ export default function LoginRipples() {
             frame = window.requestAnimationFrame(draw);
         };
 
-        const spawn = (x: number, y: number, strength: number) => {
+        const spawn = (
+            x: number,
+            y: number,
+            distance: number,
+            vx: number,
+            vy: number
+        ) => {
             ripples.push({
                 x,
                 y,
+                vx,
+                vy,
                 born: performance.now(),
-                life: 1500 + Math.random() * 450,
-                radius: 76 + Math.random() * 42,
-                strength
+                life: 3600 + Math.random() * 900,
+                radius: 150 + Math.random() * 90,
+                strength: Math.min(1, 0.42 + Math.max(0, distance - 30) / 150),
+                angle: Math.atan2(vy, vx),
+                speed: Math.min(1, distance / 90)
             });
-            if (ripples.length > 14) ripples.shift();
+            if (ripples.length > MAX_RIPPLES) ripples.shift();
             start();
         };
 
@@ -136,17 +161,15 @@ export default function LoginRipples() {
             const dx = Number.isFinite(lastX) ? event.clientX - lastX : 0;
             const dy = Number.isFinite(lastY) ? event.clientY - lastY : 0;
             const distance = Math.hypot(dx, dy);
-            const movedEnough = !Number.isFinite(lastX) || distance > 16;
-            if (!movedEnough || now - lastSpawn < 55) return;
+            const movedEnough = !Number.isFinite(lastX) || distance > 38;
+            if (!movedEnough || now - lastSpawn < 145) return;
 
+            const vx = Number.isFinite(lastX) ? dx / Math.max(1, distance) : 0;
+            const vy = Number.isFinite(lastY) ? dy / Math.max(1, distance) : 0;
             lastSpawn = now;
             lastX = event.clientX;
             lastY = event.clientY;
-            spawn(
-                event.clientX,
-                event.clientY,
-                Math.min(1, 0.42 + Math.max(0, distance - 16) / 90)
-            );
+            spawn(event.clientX, event.clientY, distance, vx, vy);
         };
 
         const onVisibilityChange = () => {

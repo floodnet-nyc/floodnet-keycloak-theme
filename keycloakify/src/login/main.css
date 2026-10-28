@@ -68,19 +68,20 @@ body.kcBodyClass .login-pf-page {
 /* Gentle pointer ripples behind the glass card, on the sign-in page only.
  * The component is inert for touch and reduced-motion users; these rules are
  * just the visual layer it draws into. */
-.fn-ripples {
+.fn-water-field {
     position: fixed;
     inset: 0;
     z-index: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
-    opacity: 0.95;
-    filter: blur(2.6px);
+    mix-blend-mode: screen;
+    opacity: 0.76;
+    filter: blur(2.6px) saturate(1.04);
 }
 
 @media (prefers-reduced-motion: reduce), (pointer: coarse) {
-    .fn-ripples {
+    .fn-water-field {
         display: none;
     }
 }

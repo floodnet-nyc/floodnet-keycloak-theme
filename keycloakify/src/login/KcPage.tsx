@@ -5,7 +5,7 @@ import type { KcContext } from "./KcContext";
 import { useI18n } from "./i18n";
 import DefaultPage from "keycloakify/login/DefaultPage";
 import Template from "keycloakify/login/Template";
-import LoginRipples from "./LoginRipples";
+import LoginWaterField from "./LoginWaterField";
 const UserProfileFormFields = lazy(
     () => import("keycloakify/login/UserProfileFormFields")
 );
@@ -19,7 +19,7 @@ export default function KcPage(props: { kcContext: KcContext }) {
 
     return (
         <Suspense>
-            {kcContext.pageId === "login.ftl" && <LoginRipples />}
+            {kcContext.pageId === "login.ftl" && <LoginWaterField />}
             {(() => {
                 switch (kcContext.pageId) {
                     default:

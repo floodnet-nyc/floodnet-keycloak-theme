@@ -2,11 +2,12 @@ import { useEffect, useRef } from "react";
 
 const SIM_COLS = 120;
 const SIM_STEP = 1 / 60;
-const BASE_C2 = 0.08;
+const BASE_C2 = 0.02;
 const REFERENCE_WIDTH = 1440;
 const MAX_C2 = 0.42;
 const DAMPING = 0.985;
 const TRAIL_RADIUS_PX = 18;
+const DEBUG_FADE_MS = 800;
 
 // Two-light palettes for the caustics. The key comes from the upper left,
 // the fill from the lower right. Add or tune entries here.
@@ -56,7 +57,8 @@ type DebugShape = {
     y0: number;
     x1: number;
     y1: number;
-    radius: number;
+    r0: number;
+    r1: number;
     born: number;
 };
 
@@ -180,20 +182,32 @@ export default function LoginWaterField() {
 
             for (let index = 0; index < debugShapes.length; index += 1) {
                 const shape = debugShapes[index];
-                const age = Math.min(1, (now - shape.born) / 2600);
-                const ageAlpha = Math.max(0, 1 - age);
-                const recency = 0.35 + (0.65 * index) / Math.max(1, debugShapes.length);
+                const age = Math.min(1, (now - shape.born) / DEBUG_FADE_MS);
+                // Tail-end capsules fade much faster than the head, so the
+                // overlay only shows recent forcing rather than a trail of
+                // long-lived marks.
+                const ageAlpha = (1 - age) * (1 - age);
+                const recency = 0.15 + (0.85 * index) / Math.max(1, debugShapes.length);
                 const alpha = ageAlpha * recency;
                 if (alpha <= 0.02) continue;
 
+                const averageRadius = (shape.r0 + shape.r1) * 0.5;
                 debugContext.beginPath();
                 debugContext.moveTo(shape.x0, shape.y0);
                 debugContext.lineTo(shape.x1, shape.y1);
-                debugContext.lineWidth = Math.max(2, shape.radius * 2);
+                debugContext.lineWidth = Math.max(2, averageRadius * 2);
                 debugContext.strokeStyle = `rgba(255, 60, 170, ${alpha * 0.28})`;
                 debugContext.stroke();
                 debugContext.lineWidth = 1.4;
                 debugContext.strokeStyle = `rgba(255, 120, 205, ${alpha * 0.9})`;
+                debugContext.stroke();
+                debugContext.beginPath();
+                debugContext.arc(shape.x0, shape.y0, Math.max(1, shape.r0), 0, Math.PI * 2);
+                debugContext.strokeStyle = `rgba(255, 120, 205, ${alpha * 0.7})`;
+                debugContext.stroke();
+                debugContext.beginPath();
+                debugContext.arc(shape.x1, shape.y1, Math.max(1, shape.r1), 0, Math.PI * 2);
+                debugContext.strokeStyle = `rgba(255, 160, 225, ${alpha * 0.95})`;
                 debugContext.stroke();
             }
 
@@ -204,7 +218,7 @@ export default function LoginWaterField() {
             debugContext.fillRect(28, 33, 18, 4);
             debugContext.fillStyle = "rgba(235, 250, 255, 0.92)";
             debugContext.font = "12px system-ui, sans-serif";
-            debugContext.fillText("trail capsule only", 54, 39);
+            debugContext.fillText("tapered capsule: tail -> head", 54, 39);
             debugContext.fillText(`palette: ${ACTIVE_PALETTE}`, 28, 61);
             debugContext.fillText("Shift+D toggles this overlay", 28, 79);
             debugContext.restore();
@@ -215,10 +229,11 @@ export default function LoginWaterField() {
             y0: number,
             x1: number,
             y1: number,
-            radius: number
+            r0: number,
+            r1: number
         ) => {
             if (!debugEnabled) return;
-            debugShapes.push({ x0, y0, x1, y1, radius, born: performance.now() });
+            debugShapes.push({ x0, y0, x1, y1, r0, r1, born: performance.now() });
         };
 
         const trimDebugShapes = () => {
@@ -232,8 +247,10 @@ export default function LoginWaterField() {
             fromY: number,
             toX: number,
             toY: number,
-            radius: number,
-            strength: number
+            tailRadius: number,
+            headRadius: number,
+            tailStrength: number,
+            headStrength: number
         ) => {
             if (!grid) return;
             const { cols, rows, curr } = grid;
@@ -244,13 +261,11 @@ export default function LoginWaterField() {
             const dx = gx1 - gx0;
             const dy = gy1 - gy0;
             const lengthSquared = dx * dx + dy * dy;
-            const reach = Math.ceil(radius * 2.2);
+            const reach = Math.ceil(Math.max(tailRadius, headRadius) * 2.2);
             const minX = Math.max(1, Math.floor(Math.min(gx0, gx1) - reach));
             const maxX = Math.min(cols - 2, Math.ceil(Math.max(gx0, gx1) + reach));
             const minY = Math.max(1, Math.floor(Math.min(gy0, gy1) - reach));
             const maxY = Math.min(rows - 2, Math.ceil(Math.max(gy0, gy1) + reach));
-            const scale = 1 / (2 * radius * radius);
-
             for (let y = minY; y <= maxY; y += 1) {
                 for (let x = minX; x <= maxX; x += 1) {
                     let t = 0;
@@ -258,12 +273,18 @@ export default function LoginWaterField() {
                         t = ((x - gx0) * dx + (y - gy0) * dy) / lengthSquared;
                         t = Math.max(0, Math.min(1, t));
                     }
+                    const localRadius = tailRadius + (headRadius - tailRadius) * t;
+                    if (localRadius < 0.25) continue;
                     const px = gx0 + dx * t;
                     const py = gy0 + dy * t;
                     const distanceSquared = (x - px) * (x - px) + (y - py) * (y - py);
                     if (distanceSquared > reach * reach) continue;
-                    const falloff = Math.exp(-distanceSquared * scale);
-                    curr[y * cols + x] -= falloff * strength;
+                    const falloff = Math.exp(
+                        -distanceSquared / (2 * localRadius * localRadius)
+                    );
+                    const localStrength =
+                        tailStrength + (headStrength - tailStrength) * t;
+                    curr[y * cols + x] -= falloff * localStrength;
                 }
             }
         };
@@ -506,25 +527,31 @@ export default function LoginWaterField() {
             smoothedSpeed += (Math.min(2.5, rawSpeed) - smoothedSpeed) * 0.22;
 
             const speedScale = 1 + Math.min(1.05, smoothedSpeed * 0.65);
-            const trailRadius = Math.max(2.0, (TRAIL_RADIUS_PX * speedScale) / cellSize);
-            // The displacement is per path length, so slow movement does not
-            // accumulate a pulse for every pointer callback.
-            const trailStrength = Math.min(0.12, distance * 0.003);
+            const headRadius = Math.max(2.0, (TRAIL_RADIUS_PX * speedScale) / cellSize);
+            const tailRadius = Math.max(1.5, headRadius * 0.45);
+            // Bias the displacement toward the leading edge and use less energy
+            // overall, so a fast drag leaves a bow wave rather than a long
+            // line-source pulse train.
+            const headStrength = Math.min(0.075, distance * 0.0018);
+            const tailStrength = headStrength * 0.18;
 
             addCapsule(
                 pendingFromX,
                 pendingFromY,
                 pendingToX,
                 pendingToY,
-                trailRadius,
-                trailStrength
+                tailRadius,
+                headRadius,
+                tailStrength,
+                headStrength
             );
             recordDebugTrail(
                 pendingFromX,
                 pendingFromY,
                 pendingToX,
                 pendingToY,
-                trailRadius * cellSize
+                tailRadius * cellSize,
+                headRadius * cellSize
             );
             trimDebugShapes();
 

@@ -1636,7 +1636,6 @@ html body .fn-devices__signout-all .pf-v5-c-button:hover {
     background:
         linear-gradient(135deg, rgba(106, 255, 211, 0.16), rgba(255, 255, 255, 0) 56%),
         #ffffff;
-    box-shadow: inset 3px 0 0 var(--fn-teal);
 }
 
 .fn-device__head {

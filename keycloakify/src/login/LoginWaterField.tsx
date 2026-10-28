@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 const SIM_COLS = 320;
 const SIM_STEP = 1 / 60;
 const WAVE_C2 = 0.18;
-const DAMPING = 0.992;
+const DAMPING = 0.994;
 const MAX_SUBSTEPS = 3;
 
 type Grid = {
@@ -12,6 +12,7 @@ type Grid = {
     prev: Float32Array;
     curr: Float32Array;
     next: Float32Array;
+    edgeDamping: Float32Array;
 };
 
 /**
@@ -48,9 +49,8 @@ export default function LoginWaterField() {
         let frame = 0;
         let lastFrameTime = 0;
         let accumulator = 0;
-        let lastPointerX = Number.NaN;
-        let lastPointerY = Number.NaN;
-        let lastImpulse = 0;
+        let lastStampX = Number.NaN;
+        let lastStampY = Number.NaN;
         let calmFrames = 0;
         let running = false;
 
@@ -59,12 +59,22 @@ export default function LoginWaterField() {
                 64,
                 Math.min(160, Math.round((SIM_COLS * height) / Math.max(1, width)))
             );
+            const edgeDamping = new Float32Array(SIM_COLS * rows);
+            const sponge = Math.min(24, Math.max(10, Math.round(rows * 0.12)));
+            for (let y = 0; y < rows; y += 1) {
+                for (let x = 0; x < SIM_COLS; x += 1) {
+                    const edgeDistance = Math.min(x, y, SIM_COLS - 1 - x, rows - 1 - y);
+                    const t = Math.min(1, edgeDistance / sponge);
+                    edgeDamping[y * SIM_COLS + x] = 0.78 + 0.22 * t * t;
+                }
+            }
             grid = {
                 cols: SIM_COLS,
                 rows,
                 prev: new Float32Array(SIM_COLS * rows),
                 curr: new Float32Array(SIM_COLS * rows),
-                next: new Float32Array(SIM_COLS * rows)
+                next: new Float32Array(SIM_COLS * rows),
+                edgeDamping
             };
             fieldCanvas.width = SIM_COLS;
             fieldCanvas.height = rows;
@@ -109,7 +119,7 @@ export default function LoginWaterField() {
 
         const stepSimulation = () => {
             if (!grid) return;
-            const { cols, rows, prev, curr, next } = grid;
+            const { cols, rows, prev, curr, next, edgeDamping } = grid;
 
             for (let y = 1; y < rows - 1; y += 1) {
                 const row = y * cols;
@@ -124,7 +134,8 @@ export default function LoginWaterField() {
                         (2 * curr[index] -
                             prev[index] +
                             WAVE_C2 * (neighbours - 4 * curr[index])) *
-                        DAMPING;
+                        DAMPING *
+                        edgeDamping[index];
                 }
             }
 
@@ -162,18 +173,19 @@ export default function LoginWaterField() {
                     const dx = curr[index + 1] - curr[index - 1];
                     const dy = curr[index + cols] - curr[index - cols];
                     const lightSlope = Math.max(0, dx * 0.9 + dy * 0.4);
-                    const glow = Math.min(1, lightSlope * 34 + Math.max(0, height) * 0.5);
+                    const glow = Math.min(1, lightSlope * 46 + Math.max(0, height) * 0.7);
 
                     if (glow < 0.02) continue;
 
                     const highlight = Math.min(1, glow * 1.2);
                     const pixel = index * 4;
-                    // A wet, mint-tinted reflection: pale crests on a cyan base.
-                    pixels[pixel] = 178 + Math.round(42 * highlight);
-                    pixels[pixel + 1] = 248 + Math.round(7 * highlight);
-                    pixels[pixel + 2] = 236 + Math.round(14 * highlight);
+                    // Cool scene light rather than a white overlay: blue-cyan
+                    // highlights that screen into the rainy photo.
+                    pixels[pixel] = 64 + Math.round(42 * highlight);
+                    pixels[pixel + 1] = 168 + Math.round(48 * highlight);
+                    pixels[pixel + 2] = 255;
                     pixels[pixel + 3] = Math.round(
-                        255 * Math.min(0.26, Math.pow(glow, 1.7) * 0.27)
+                        255 * Math.min(0.58, Math.pow(glow, 1.4) * 0.47)
                     );
                 }
             }
@@ -252,26 +264,66 @@ export default function LoginWaterField() {
             frame = window.requestAnimationFrame(loop);
         };
 
+        const stampSegment = (toX: number, toY: number) => {
+            if (!grid) return false;
+
+            if (!Number.isFinite(lastStampX) || !Number.isFinite(lastStampY)) {
+                addDisturbance(toX, toY, 0.018);
+                lastStampX = toX;
+                lastStampY = toY;
+                return true;
+            }
+
+            const dx = toX - lastStampX;
+            const dy = toY - lastStampY;
+            const distance = Math.hypot(dx, dy);
+            if (distance < 0.75) return false;
+
+            // A pointer leaving and re-entering far away should not carve a
+            // line across the whole scene.
+            if (distance > 420) {
+                lastStampX = toX;
+                lastStampY = toY;
+                addDisturbance(toX, toY, 0.018);
+                return true;
+            }
+
+            // Sample the path at roughly one grid-cell steps so fast swipes
+            // leave a line in the water instead of a row of droplets.
+            const spacing = Math.max(3.2, width / SIM_COLS * 0.85);
+            const steps = Math.max(1, Math.min(120, Math.ceil(distance / spacing)));
+            const stepX = dx / steps;
+            const stepY = dy / steps;
+            const totalStrength = Math.min(0.3, distance * 0.0022);
+            const perStamp = Math.min(0.02, totalStrength / steps);
+
+            for (let step = 1; step <= steps; step += 1) {
+                addDisturbance(
+                    lastStampX + stepX * step,
+                    lastStampY + stepY * step,
+                    perStamp
+                );
+            }
+
+            lastStampX = toX;
+            lastStampY = toY;
+            return true;
+        };
+
         const onPointerMove = (event: PointerEvent) => {
             if (event.pointerType && event.pointerType !== "mouse") return;
 
-            const now = performance.now();
-            const dx = Number.isFinite(lastPointerX) ? event.clientX - lastPointerX : 0;
-            const dy = Number.isFinite(lastPointerY) ? event.clientY - lastPointerY : 0;
-            const distance = Math.hypot(dx, dy);
-            if ((Number.isFinite(lastPointerX) && distance < 7) || now - lastImpulse < 34) {
-                return;
+            const coalesced =
+                typeof event.getCoalescedEvents === "function"
+                    ? event.getCoalescedEvents()
+                    : [];
+            const samples = coalesced.length > 0 ? coalesced : [event];
+            let stamped = false;
+            for (const sample of samples) {
+                stamped = stampSegment(sample.clientX, sample.clientY) || stamped;
             }
 
-            lastPointerX = event.clientX;
-            lastPointerY = event.clientY;
-            lastImpulse = now;
-            addDisturbance(
-                event.clientX,
-                event.clientY,
-                Math.min(0.15, 0.05 + distance / 1000)
-            );
-            start();
+            if (stamped) start();
         };
 
         const onVisibilityChange = () => {

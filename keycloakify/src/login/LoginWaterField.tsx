@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
 
-const SIM_COLS = 320;
+const SIM_COLS = 120;
 const SIM_STEP = 1 / 60;
 const WAVE_C2 = 0.18;
+const WAVE_C = Math.sqrt(WAVE_C2);
 const DAMPING = 0.994;
 const MAX_SUBSTEPS = 3;
 
@@ -12,7 +13,6 @@ type Grid = {
     prev: Float32Array;
     curr: Float32Array;
     next: Float32Array;
-    edgeDamping: Float32Array;
 };
 
 /**
@@ -59,22 +59,12 @@ export default function LoginWaterField() {
                 64,
                 Math.min(160, Math.round((SIM_COLS * height) / Math.max(1, width)))
             );
-            const edgeDamping = new Float32Array(SIM_COLS * rows);
-            const sponge = Math.min(24, Math.max(10, Math.round(rows * 0.12)));
-            for (let y = 0; y < rows; y += 1) {
-                for (let x = 0; x < SIM_COLS; x += 1) {
-                    const edgeDistance = Math.min(x, y, SIM_COLS - 1 - x, rows - 1 - y);
-                    const t = Math.min(1, edgeDistance / sponge);
-                    edgeDamping[y * SIM_COLS + x] = 0.78 + 0.22 * t * t;
-                }
-            }
             grid = {
                 cols: SIM_COLS,
                 rows,
                 prev: new Float32Array(SIM_COLS * rows),
                 curr: new Float32Array(SIM_COLS * rows),
-                next: new Float32Array(SIM_COLS * rows),
-                edgeDamping
+                next: new Float32Array(SIM_COLS * rows)
             };
             fieldCanvas.width = SIM_COLS;
             fieldCanvas.height = rows;
@@ -119,7 +109,7 @@ export default function LoginWaterField() {
 
         const stepSimulation = () => {
             if (!grid) return;
-            const { cols, rows, prev, curr, next, edgeDamping } = grid;
+            const { cols, rows, prev, curr, next } = grid;
 
             for (let y = 1; y < rows - 1; y += 1) {
                 const row = y * cols;
@@ -134,20 +124,41 @@ export default function LoginWaterField() {
                         (2 * curr[index] -
                             prev[index] +
                             WAVE_C2 * (neighbours - 4 * curr[index])) *
-                        DAMPING *
-                        edgeDamping[index];
+                        DAMPING;
                 }
             }
 
-            // Let the edges absorb rather than reflect back into the scene.
-            for (let x = 0; x < cols; x += 1) {
-                next[x] = 0;
-                next[(rows - 1) * cols + x] = 0;
+            // First-order Mur absorbing boundary: let outgoing waves cross the
+            // frame instead of bouncing energy back into the scene. The wave
+            // equation is solved on a unit grid, so the Courant number is
+            // simply sqrt(c2).
+            const mur = (WAVE_C - 1) / (WAVE_C + 1);
+            for (let y = 1; y < rows - 1; y += 1) {
+                const row = y * cols;
+                const left = row;
+                const right = row + cols - 1;
+                next[left] =
+                    (curr[left + 1] + mur * (next[left + 1] - curr[left])) * DAMPING;
+                next[right] =
+                    (curr[right - 1] + mur * (next[right - 1] - curr[right])) * DAMPING;
             }
-            for (let y = 0; y < rows; y += 1) {
-                next[y * cols] = 0;
-                next[y * cols + cols - 1] = 0;
+            for (let x = 1; x < cols - 1; x += 1) {
+                const top = x;
+                const bottom = (rows - 1) * cols + x;
+                next[top] =
+                    (curr[top + cols] + mur * (next[top + cols] - curr[top])) * DAMPING;
+                next[bottom] =
+                    (curr[bottom - cols] + mur * (next[bottom - cols] - curr[bottom])) *
+                    DAMPING;
             }
+
+            // Mur corners are not uniquely defined; average the two adjacent
+            // one-way updates so a corner does not become a point reflector.
+            next[0] = (next[1] + next[cols]) * 0.5;
+            next[cols - 1] = (next[cols - 2] + next[2 * cols - 1]) * 0.5;
+            next[(rows - 1) * cols] = (next[(rows - 1) * cols + 1] + next[(rows - 2) * cols]) * 0.5;
+            next[rows * cols - 1] =
+                (next[rows * cols - 2] + next[(rows - 1) * cols - 1]) * 0.5;
 
             grid.prev = curr;
             grid.curr = next;

@@ -74,6 +74,50 @@ export const Root = () => {
     const context = useEnvironment<AccountEnvironment>();
     const [content, setContent] = useState<RouteObject[]>();
 
+    useEffect(() => {
+        // The sidebar is an off-canvas drawer below the xl breakpoint. Close it
+        // when the user taps the scrim or presses Escape.
+        const closeIfOpen = () => {
+            if (!window.matchMedia("(max-width: 1199px)").matches) {
+                return;
+            }
+
+            const sidebar = document.querySelector(".pf-v5-c-page__sidebar");
+
+            if (sidebar?.classList.contains("pf-m-expanded")) {
+                document.getElementById("nav-toggle")?.click();
+            }
+        };
+
+        const onClick = (event: MouseEvent) => {
+            const sidebar = document.querySelector(".pf-v5-c-page__sidebar");
+            const target = event.target as Element | null;
+
+            // The masthead toggle handles itself; don't double-toggle it.
+            if (target?.closest("#nav-toggle")) {
+                return;
+            }
+
+            if (!sidebar || !sidebar.contains(event.target as Node)) {
+                closeIfOpen();
+            }
+        };
+
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                closeIfOpen();
+            }
+        };
+
+        document.addEventListener("click", onClick);
+        document.addEventListener("keydown", onKeyDown);
+
+        return () => {
+            document.removeEventListener("click", onClick);
+            document.removeEventListener("keydown", onKeyDown);
+        };
+    }, []);
+
     usePromise(
         signal => fetchContentJson({ signal, context }),
         content => {

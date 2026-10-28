@@ -522,11 +522,38 @@ html body .pf-v5-c-form-control:hover {
     border-color: rgba(14, 34, 51, 0.34);
 }
 
-html body .pf-v5-c-form-control:focus,
-html body .pf-v5-c-form-control.pf-m-focus {
+/* The visual field is the wrapper span; focus lives on the inner input, so
+ * style the wrapper with :focus-within. */
+html body .pf-v5-c-form-control:focus-within {
     outline: none;
     border-color: var(--fn-teal);
     box-shadow: 0 0 0 3px rgba(12, 122, 104, 0.14);
+}
+
+/* PatternFly adds square ::before/::after border overlays to the wrapper
+ * (a grey bottom rule that turns blue on focus). The theme uses the wrapper's
+ * own rounded border, so drop the overlays. */
+html body .pf-v5-c-form-control::before,
+html body .pf-v5-c-form-control::after {
+    border: 0;
+}
+
+/* The inner control should be invisible plumbing: the span draws the field. */
+html body .pf-v5-c-form-control > input,
+html body .pf-v5-c-form-control > textarea,
+html body .pf-v5-c-form-control > select {
+    color: var(--fn-ink);
+    background-color: transparent;
+    border: 0;
+    outline: none;
+    box-shadow: none;
+}
+
+html body .pf-v5-c-form-control > input:focus,
+html body .pf-v5-c-form-control > input:focus-visible,
+html body .pf-v5-c-form-control > textarea:focus,
+html body .pf-v5-c-form-control > select:focus {
+    outline: none;
 }
 
 html body .pf-v5-c-form-control::placeholder {

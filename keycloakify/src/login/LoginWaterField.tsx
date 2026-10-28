@@ -38,8 +38,8 @@ const PALETTES = {
     },
     puddle: {
         // soft blue #5ba8c2 (puddle), fill = deep blue #0047ab (water)
-        key: hex2rgb("#4d5580"),
-        fill: hex2rgb("#102f5b")
+        key: hex2rgb("#3f5f8b"),
+        fill: hex2rgb("#818ecb")
     },
     dusk: {
         // warm peach #ff8f3e (streetlights), fill = violet-blue #003cef (rainy dusk)
@@ -678,6 +678,38 @@ export default function LoginWaterField() {
             if (moved) start();
         };
 
+        const onPointerDown = (event: PointerEvent) => {
+            if (event.pointerType && event.pointerType !== "mouse") return;
+            if (event.button !== 0) return;
+            const target = event.target instanceof Element ? event.target : null;
+            if (target?.closest(".card-pf, a, button, input, select, textarea, label")) {
+                return;
+            }
+
+            const cellSize = width / SIM_COLS;
+            const radius = Math.max(3, 34 / cellSize);
+            addCapsule(
+                event.clientX,
+                event.clientY,
+                event.clientX,
+                event.clientY,
+                radius,
+                radius,
+                0.12,
+                0.12
+            );
+            recordDebugTrail(
+                event.clientX,
+                event.clientY,
+                event.clientX,
+                event.clientY,
+                radius * cellSize,
+                radius * cellSize
+            );
+            trimDebugShapes();
+            start();
+        };
+
         const onVisibilityChange = () => {
             if (document.hidden && running) stop();
         };
@@ -704,6 +736,7 @@ export default function LoginWaterField() {
         resize();
         window.addEventListener("resize", resize);
         window.addEventListener("pointermove", onPointerMove, { passive: true });
+        window.addEventListener("pointerdown", onPointerDown, { passive: true });
         window.addEventListener("keydown", onKeyDown);
         document.addEventListener("visibilitychange", onVisibilityChange);
 
@@ -711,6 +744,7 @@ export default function LoginWaterField() {
             window.cancelAnimationFrame(frame);
             window.removeEventListener("resize", resize);
             window.removeEventListener("pointermove", onPointerMove);
+            window.removeEventListener("pointerdown", onPointerDown);
             window.removeEventListener("keydown", onKeyDown);
             document.removeEventListener("visibilitychange", onVisibilityChange);
             document.body.classList.remove("fn-water-debug-on");

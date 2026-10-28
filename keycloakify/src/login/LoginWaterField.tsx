@@ -7,6 +7,11 @@ const REFERENCE_WIDTH = 1440;
 const MAX_C2 = 0.42;
 const DAMPING = 0.994;
 const TRAIL_RADIUS_PX = 18;
+
+// Two directional lights, inspired by the login card and photo:
+// a mint key from the top-left and a cobalt fill from the bottom-right.
+const KEY_LIGHT_COLOR = [255, 122, 217] as const;
+const FILL_LIGHT_COLOR = [73, 200, 255] as const;
 const MAX_SUBSTEPS = 3;
 
 type DebugShape = {
@@ -299,22 +304,46 @@ export default function LoginWaterField() {
                     const dy = curr[index + cols] - curr[index - cols];
                     const keyLight = Math.max(0, dx * 0.9 + dy * 0.4);
                     const fillLight = Math.max(0, -dx * 0.9 - dy * 0.4);
-                    const glow = Math.min(
+                    const keyGlow = Math.min(
                         1,
-                        keyLight * 46 + fillLight * 9 + Math.max(0, height) * 0.6
+                        keyLight * 42 + Math.max(0, height) * 0.5
                     );
+                    const fillGlow = Math.min(1, fillLight * 16);
+                    const totalGlow = keyGlow + fillGlow;
 
-                    if (glow < 0.02) continue;
+                    if (totalGlow < 0.02) continue;
 
-                    const highlight = Math.min(1, glow * 1.2);
+                    const mix = keyGlow / totalGlow;
+                    const lift = 0.82 + 0.18 * Math.min(1, totalGlow * 1.2);
                     const pixel = index * 4;
-                    // Cool scene light rather than a white overlay: blue-cyan
-                    // highlights that screen into the rainy photo.
-                    pixels[pixel] = 18 + Math.round(28 * highlight);
-                    pixels[pixel + 1] = 76 + Math.round(58 * highlight);
-                    pixels[pixel + 2] = 220 + Math.round(35 * highlight);
+                    // Blend the two light directions into a gradient rather
+                    // than flattening everything to one blue.
+                    pixels[pixel] = Math.min(
+                        255,
+                        Math.round(
+                            (KEY_LIGHT_COLOR[0] * mix +
+                                FILL_LIGHT_COLOR[0] * (1 - mix)) *
+                                lift
+                        )
+                    );
+                    pixels[pixel + 1] = Math.min(
+                        255,
+                        Math.round(
+                            (KEY_LIGHT_COLOR[1] * mix +
+                                FILL_LIGHT_COLOR[1] * (1 - mix)) *
+                                lift
+                        )
+                    );
+                    pixels[pixel + 2] = Math.min(
+                        255,
+                        Math.round(
+                            (KEY_LIGHT_COLOR[2] * mix +
+                                FILL_LIGHT_COLOR[2] * (1 - mix)) *
+                                lift
+                        )
+                    );
                     pixels[pixel + 3] = Math.round(
-                        255 * Math.min(0.6, Math.pow(glow, 1.4) * 0.5)
+                        255 * Math.min(0.6, Math.pow(totalGlow, 1.4) * 0.45)
                     );
                 }
             }

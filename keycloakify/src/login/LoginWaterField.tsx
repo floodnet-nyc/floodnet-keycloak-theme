@@ -71,6 +71,8 @@ export default function LoginWaterField() {
         let accumulator = 0;
         let lastStampX = Number.NaN;
         let lastStampY = Number.NaN;
+        let lastStampTime = Number.NaN;
+        let smoothedSpeed = 0;
         let calmFrames = 0;
         let running = false;
 
@@ -385,19 +387,20 @@ export default function LoginWaterField() {
             frame = window.requestAnimationFrame(loop);
         };
 
-        const stampSegment = (toX: number, toY: number) => {
+        const stampSegment = (toX: number, toY: number, timeStamp: number) => {
             if (!grid) return false;
 
             const cellSize = width / SIM_COLS;
-            const trailRadius = Math.max(2.0, TRAIL_RADIUS_PX / cellSize);
+            const baseRadius = Math.max(2.0, TRAIL_RADIUS_PX / cellSize);
             const pointStrength = 0.014;
 
             if (!Number.isFinite(lastStampX) || !Number.isFinite(lastStampY)) {
-                addCapsule(toX, toY, toX, toY, trailRadius, pointStrength);
-                recordDebugTrail(toX, toY, toX, toY, trailRadius * cellSize);
+                addCapsule(toX, toY, toX, toY, baseRadius, pointStrength);
+                recordDebugTrail(toX, toY, toX, toY, baseRadius * cellSize);
                 trimDebugShapes();
                 lastStampX = toX;
                 lastStampY = toY;
+                lastStampTime = timeStamp;
                 return true;
             }
 
@@ -411,13 +414,25 @@ export default function LoginWaterField() {
             if (distance > 420) {
                 lastStampX = toX;
                 lastStampY = toY;
-                addCapsule(toX, toY, toX, toY, trailRadius, pointStrength);
-                recordDebugTrail(toX, toY, toX, toY, trailRadius * cellSize);
+                lastStampTime = timeStamp;
+                smoothedSpeed = 0;
+                addCapsule(toX, toY, toX, toY, baseRadius, pointStrength);
+                recordDebugTrail(toX, toY, toX, toY, baseRadius * cellSize);
                 trimDebugShapes();
                 return true;
             }
 
+            const elapsed = Number.isFinite(lastStampTime)
+                ? Math.max(1, timeStamp - lastStampTime)
+                : 16;
+            const rawSpeed = distance / elapsed; // CSS pixels per millisecond
+            smoothedSpeed += (Math.min(2.5, rawSpeed) - smoothedSpeed) * 0.22;
+            lastStampTime = timeStamp;
+
+            const speedScale = 1 + Math.min(1.05, smoothedSpeed * 0.65);
+            const trailRadius = Math.max(2.0, (TRAIL_RADIUS_PX * speedScale) / cellSize);
             const trailStrength = Math.min(0.05, 0.018 + distance / 1400);
+
             addCapsule(lastStampX, lastStampY, toX, toY, trailRadius, trailStrength);
             recordDebugTrail(
                 lastStampX,
@@ -443,7 +458,12 @@ export default function LoginWaterField() {
             const samples = coalesced.length > 0 ? coalesced : [event];
             let stamped = false;
             for (const sample of samples) {
-                stamped = stampSegment(sample.clientX, sample.clientY) || stamped;
+                stamped =
+                    stampSegment(
+                        sample.clientX,
+                        sample.clientY,
+                        sample.timeStamp || performance.now()
+                    ) || stamped;
             }
 
             if (stamped) {

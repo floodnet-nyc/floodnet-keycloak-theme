@@ -12,6 +12,7 @@ const RAW_FIELD_SCALE = 0.15;
 const HEIGHT_COLOR_SCALE = 0.2;
 const HEIGHT_NEGATIVE_COLOR = [74, 120, 255] as const;
 const HEIGHT_POSITIVE_COLOR = [255, 112, 220] as const;
+const HYBRID_WAKE_COLOR = [132, 196, 255] as const;
 
 // Two-light palettes for the caustics. The key comes from the upper left,
 // the fill from the lower right. Add or tune entries here.
@@ -129,6 +130,13 @@ export default function LoginWaterField() {
         let pendingToY = Number.NaN;
         let pendingSince = 0;
         let smoothedSpeed = 0;
+        let wakeX = Number.NaN;
+        let wakeY = Number.NaN;
+        let wakeTargetX = Number.NaN;
+        let wakeTargetY = Number.NaN;
+        let wakeDirX = 0;
+        let wakeDirY = 1;
+        let lastWakeMove = 0;
         let calmFrames = 0;
         let running = false;
 
@@ -408,6 +416,108 @@ export default function LoginWaterField() {
             grid.next = prev;
         };
 
+        const rgba = (color: readonly [number, number, number], alpha: number) =>
+            `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
+
+        const drawHybridWake = (now: number) => {
+            if (
+                !Number.isFinite(wakeX) ||
+                !Number.isFinite(wakeY) ||
+                !Number.isFinite(wakeTargetX) ||
+                !Number.isFinite(wakeTargetY)
+            ) {
+                return;
+            }
+
+            const idle = Math.max(0, 1 - (now - lastWakeMove) / 800);
+            const speed = Math.min(1, smoothedSpeed * 1.2);
+            const activity = idle * Math.min(1, 0.25 + speed * 0.75);
+            if (activity < 0.01) return;
+
+            wakeX += (wakeTargetX - wakeX) * 0.2;
+            wakeY += (wakeTargetY - wakeY) * 0.2;
+
+            let dirLength = Math.hypot(wakeDirX, wakeDirY);
+            let dirX = wakeDirX;
+            let dirY = wakeDirY;
+            if (dirLength < 0.01) {
+                dirX = 0;
+                dirY = 1;
+                dirLength = 1;
+            } else {
+                dirX /= dirLength;
+                dirY /= dirLength;
+            }
+            const perpX = -dirY;
+            const perpY = dirX;
+            const angle = Math.atan2(dirY, dirX);
+
+            display.save();
+            display.globalCompositeOperation = "screen";
+            display.lineCap = "round";
+
+            // A soft crest at the finger.
+            const crestRadius = 30 + speed * 26;
+            const crest = display.createRadialGradient(
+                wakeX,
+                wakeY,
+                0,
+                wakeX,
+                wakeY,
+                crestRadius
+            );
+            crest.addColorStop(0, rgba(HEIGHT_POSITIVE_COLOR, activity * 0.44));
+            crest.addColorStop(0.45, rgba(HEIGHT_POSITIVE_COLOR, activity * 0.16));
+            crest.addColorStop(1, rgba(HEIGHT_POSITIVE_COLOR, 0));
+            display.fillStyle = crest;
+            display.beginPath();
+            display.ellipse(
+                wakeX,
+                wakeY,
+                crestRadius * 0.8,
+                crestRadius * 1.25,
+                angle,
+                0,
+                Math.PI * 2
+            );
+            display.fill();
+
+            if (dirLength > 0.01) {
+                const apexX = wakeX - dirX * 8;
+                const apexY = wakeY - dirY * 8;
+                const armLength = 70 + speed * 150;
+                const halfWidth = 24 + speed * 42;
+
+                for (const side of [-1, 1]) {
+                    const endX =
+                        apexX - dirX * armLength + perpX * halfWidth * side;
+                    const endY =
+                        apexY - dirY * armLength + perpY * halfWidth * side;
+
+                    for (let segment = 0; segment < 6; segment += 1) {
+                        const t0 = segment / 6;
+                        const t1 = (segment + 1) / 6;
+                        const x0 = apexX + (endX - apexX) * t0;
+                        const y0 = apexY + (endY - apexY) * t0;
+                        const x1 = apexX + (endX - apexX) * t1;
+                        const y1 = apexY + (endY - apexY) * t1;
+                        const fade = (1 - t1) * (1 - t1);
+                        display.beginPath();
+                        display.moveTo(x0, y0);
+                        display.lineTo(x1, y1);
+                        display.lineWidth = Math.max(2, 18 * fade + 2);
+                        display.strokeStyle = rgba(
+                            HYBRID_WAKE_COLOR,
+                            activity * fade * 0.95
+                        );
+                        display.stroke();
+                    }
+                }
+            }
+
+            display.restore();
+        };
+
         const render = () => {
             if (!grid || !fieldImage) return;
             const { cols, rows, curr } = grid;
@@ -515,6 +625,7 @@ export default function LoginWaterField() {
                 width,
                 height
             );
+            drawHybridWake(performance.now());
         };
 
         const isCalm = () => {
@@ -706,6 +817,25 @@ export default function LoginWaterField() {
                     pendingToY = y;
                     moved = true;
                 }
+
+                if (Number.isFinite(wakeTargetX)) {
+                    const wakeDx = x - wakeTargetX;
+                    const wakeDy = y - wakeTargetY;
+                    const wakeDistance = Math.hypot(wakeDx, wakeDy);
+                    if (wakeDistance > 0.1) {
+                        wakeDirX +=
+                            (wakeDx / wakeDistance - wakeDirX) * 0.25;
+                        wakeDirY +=
+                            (wakeDy / wakeDistance - wakeDirY) * 0.25;
+                    }
+                }
+                wakeTargetX = x;
+                wakeTargetY = y;
+                if (!Number.isFinite(wakeX)) {
+                    wakeX = x;
+                    wakeY = y;
+                }
+                lastWakeMove = time;
             }
 
             if (moved) start();
@@ -731,6 +861,13 @@ export default function LoginWaterField() {
                 0.12,
                 0.12
             );
+            wakeX = event.clientX;
+            wakeY = event.clientY;
+            wakeTargetX = event.clientX;
+            wakeTargetY = event.clientY;
+            wakeDirX = 0;
+            wakeDirY = 1;
+            lastWakeMove = performance.now();
             recordDebugTrail(
                 event.clientX,
                 event.clientY,

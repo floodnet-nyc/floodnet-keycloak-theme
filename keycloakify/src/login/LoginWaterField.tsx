@@ -10,6 +10,8 @@ const TRAIL_RADIUS_PX = 20;
 const DEBUG_FADE_MS = 800;
 const RAW_FIELD_SCALE = 0.15;
 const HEIGHT_COLOR_SCALE = 0.2;
+const HEIGHT_NEGATIVE_COLOR = [74, 120, 255] as const;
+const HEIGHT_POSITIVE_COLOR = [255, 112, 220] as const;
 
 // Two-light palettes for the caustics. The key comes from the upper left,
 // the fill from the lower right. Add or tune entries here.
@@ -120,6 +122,7 @@ export default function LoginWaterField() {
         let lastFrameTime = 0;
         let accumulator = 0;
         let colorByHeight = true;
+        canvas.classList.toggle("fn-water-field--height", colorByHeight);
         let pendingFromX = Number.NaN;
         let pendingFromY = Number.NaN;
         let pendingToX = Number.NaN;
@@ -430,8 +433,11 @@ export default function LoginWaterField() {
                         );
                         const magnitude = Math.abs(value);
                         if (magnitude < 0.018) continue;
-                        const color = value >= 0 ? PALETTE.key : PALETTE.fill;
-                        const lift = 0.65 + 0.35 * magnitude;
+                        const color =
+                            value >= 0
+                                ? HEIGHT_POSITIVE_COLOR
+                                : HEIGHT_NEGATIVE_COLOR;
+                        const lift = 0.72 + 0.28 * magnitude;
                         const pixel = index * 4;
                         pixels[pixel] = Math.min(255, Math.round(color[0] * lift));
                         pixels[pixel + 1] = Math.min(
@@ -443,7 +449,7 @@ export default function LoginWaterField() {
                             Math.round(color[2] * lift)
                         );
                         pixels[pixel + 3] = Math.round(
-                            255 * Math.min(0.6, Math.pow(magnitude, 0.9) * 0.55)
+                            255 * Math.min(0.52, Math.pow(magnitude, 0.95) * 0.5)
                         );
                         continue;
                     }
@@ -744,6 +750,7 @@ export default function LoginWaterField() {
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.shiftKey && event.key.toLowerCase() === "h") {
                 colorByHeight = !colorByHeight;
+                canvas.classList.toggle("fn-water-field--height", colorByHeight);
                 if (grid) render();
                 if (debugEnabled) drawDebug();
                 return;

@@ -80,6 +80,11 @@ body.kcBodyClass .login-pf-page {
     filter: blur(5.2px) saturate(1.05);
 }
 
+.fn-water-field.fn-water-field--height {
+    mix-blend-mode: screen;
+    opacity: 0.62;
+}
+
 @media (prefers-reduced-motion: reduce), (pointer: coarse) {
     .fn-water-field {
         display: none;

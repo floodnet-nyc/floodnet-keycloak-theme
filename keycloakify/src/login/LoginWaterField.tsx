@@ -43,8 +43,8 @@ const PALETTES = {
     },
     puddle: {
         // soft blue #5ba8c2 (puddle), fill = deep blue #0047ab (water)
-        key: hex2rgb("#3f5f8b"),
-        fill: hex2rgb("#818ecb")
+        key: hex2rgb("#02347a"),
+        fill: hex2rgb("#081f86")
     },
     dusk: {
         // warm peach #ff8f3e (streetlights), fill = violet-blue #003cef (rainy dusk)

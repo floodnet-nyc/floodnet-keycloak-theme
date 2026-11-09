@@ -118,7 +118,7 @@ npm run build-keycloak-theme
 ## Deploy
 
 `keycloakify/Dockerfile` builds an image holding only
-`/opt/keycloak/providers/floodnet-keycloak-theme.jar` (CI publishes it as
+`/opt/keycloak/providers/floodnet-keycloak-theme.jar` (pushing a `v*` tag publishes it as
 `ghcr.io/floodnet-nyc/floodnet-keycloakify-theme`). Copy the jar into
 Keycloak's `providers/` directory, then select `floodnet` as the realm's
 login, account, admin and email theme. Don't also mount the v1 `floodnet/`

@@ -21,4 +21,4 @@ COPY . .
 RUN npx keycloakify sync-extensions && npm run build-keycloak-theme
 
 FROM alpine
-COPY --from=build /src/dist_keycloak/floodnet-keycloak-theme.jar /opt/keycloak/providers/floodnet-keycloak-theme.jar
+COPY --chmod=644 --from=build /src/dist_keycloak/floodnet-keycloak-theme.jar /opt/keycloak/providers/floodnet-keycloak-theme.jar

@@ -44,7 +44,8 @@
         "jszip": "^3.10.1",
         "p-debounce": "^5.1.0",
         "reactflow": "^11.11.4",
-        "yaml": "^2.8.3"
+        "yaml": "^2.8.3",
+        "@keycloakify/email-native": "~260007.0.0"
     },
     "devDependencies": {
         "@eslint/js": "^9.15.0",

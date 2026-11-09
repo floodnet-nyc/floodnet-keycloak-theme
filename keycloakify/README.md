@@ -3,10 +3,12 @@
 An experimental replacement for the hand-written `floodnet/` FreeMarker theme,
 built with [Keycloakify 11](https://keycloakify.dev).
 
-Two theme types are ported so far: **login** (same character as the current
-theme) and **account** (its own character — warm paper, floating ink rail,
-serif headings, no flood photo). The admin console and email templates still
-come from the classic `floodnet/` theme.
+All four theme types ship in one provider jar: **login** (same character as
+the classic theme), **account** (its own character: warm paper, floating ink
+rail, serif headings, no flood photo), **admin** (stock console, FloodNet
+logo and colours only) and **email** (the restyled FreeMarker layout). The
+classic `floodnet/` folder at the repo root is kept as v1 for rollback; this
+project does not read from it.
 
 ## Login
 
@@ -31,6 +33,29 @@ is kept intact and re-skinned.
 
 ![Account mobile](docs/account-mobile.jpg)
 
+## Admin
+
+The stock Keycloak admin console with minimal branding: the masthead logo and
+dashboard icon (`src/admin/assets/logo.svg`, `icon.svg`) and PatternFly brand
+tokens (`src/admin/floodnet.css`). Everything else is upstream, so a Keycloak
+upgrade is a version bump of `@keycloakify/keycloak-admin-ui`.
+
+The account console shows an **Admin console** link in its masthead to
+members of `/server-admin` (`ADMIN_GROUP_PATHS` in
+`src/account/root/Header.tsx`). The account token carries no
+realm-management roles, so the check reads the user's groups from the account
+API. That needs the `account` client's `view-groups` role, which Keycloak does
+not grant by default: give it to the `server-admin` group in the realm config.
+Without it the link stays hidden.
+
+![Admin console](docs/admin-console.jpg)
+
+## Email
+
+`src/email/` is Keycloak's native FreeMarker email theme
+(`@keycloakify/email-native`). Only `html/template.ftl` (the layout) and
+`resources/img/` are owned; every message template is upstream.
+
 ## Layout
 
 ```
@@ -45,6 +70,13 @@ src/account/root/PageNav.tsx      icon navigation rail (owned)
 src/account/root/Header.tsx       FloodNet masthead + initials avatar (owned)
 src/account/root/Root.tsx         routing/shell (owned, for scroll-spy id)
 src/account/colorScheme.ts        fixed light identity (owned)
+
+src/admin/KcAdminUi.tsx           admin entry point (owned) — title + CSS import
+src/admin/floodnet.css            admin brand tokens only
+src/admin/assets/logo.svg, icon.svg  FloodNet logo (owned)
+
+src/email/html/template.ftl       email layout (owned)
+src/email/resources/img/          email logomark
 
 src/main.tsx                      login entry + dev-only page preview
 vite.config.ts                    theme name, Keycloak version targets
@@ -77,7 +109,7 @@ Needs a JDK and Maven on `PATH` (Keycloakify shells out to `mvn`):
 
 ```bash
 npm run build-keycloak-theme
-# -> dist_keycloak/floodnet-keycloak-theme.jar  (~5.6 MB, login + account)
+# -> dist_keycloak/floodnet-keycloak-theme.jar  (~13 MB, all four types)
 ```
 
 `keycloakVersionTargets` in `vite.config.ts` is pinned to the
@@ -85,18 +117,20 @@ npm run build-keycloak-theme
 
 ## Deploy
 
-Mount the jar into Keycloak, then select `floodnet` as the realm's **login and
-account theme** (Realm settings → Themes, or `kcadm.sh update
-realms/<realm> -s loginTheme=floodnet -s accountTheme=floodnet`).
+`keycloakify/Dockerfile` builds an image holding only
+`/opt/keycloak/providers/floodnet-keycloak-theme.jar` (CI publishes it as
+`ghcr.io/floodnet-nyc/floodnet-keycloakify-theme`). Copy the jar into
+Keycloak's `providers/` directory, then select `floodnet` as the realm's
+login, account, admin and email theme. Don't also mount the v1 `floodnet/`
+folder theme: both are named `floodnet`.
 
 ```yaml
 volumes:
   - ./keycloakify/dist_keycloak/floodnet-keycloak-theme.jar:/opt/keycloak/providers/floodnet-theme.jar
 ```
 
-Do **not** set `KC_SPI_THEME_DEFAULT=floodnet`: this theme ships only the login
-and account types, so Keycloak would also try to resolve the admin/email themes
-from it and fail.
+With a new provider jar, plain `kc.sh start` re-runs its build step at boot
+(slower first start); an `--optimized` image would avoid that.
 
 ## Design notes
 
@@ -115,9 +149,9 @@ state; content sits on a large paper card with serif headings.
 
 ## Notes / next steps
 
-- Admin console and email themes are not ported yet.
-- The account theme adds the upstream account UI bundle (~440 kB) and the
-  jar grows to ~5.6 MB.
-- If you want to stay on the classic FTL theme, the same login polish is
-  achievable in ~100 lines of CSS; Keycloakify's payoff is the maintained page
-  set, realtime validation and the account theme.
+- Welcome page: not themed. Redirect the auth root to the account console at
+  the proxy instead (`/` → `/realms/<realm>/account/`).
+- Keycloak 26.8 runs in iot-platform; the newest admin/account UI packages are
+  26.7 (`260700.*`). Bump them when 26.8 builds are published.
+- The jar is ~13 MB. In a local Keycloak 26.8 test it added about 10 MB of
+  resident memory after loading login, account and admin pages.

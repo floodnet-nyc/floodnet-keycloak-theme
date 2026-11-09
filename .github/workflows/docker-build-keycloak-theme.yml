@@ -22,3 +22,11 @@ jobs:
       context: .
       image_name: floodnet-nyc/floodnet-keycloak-theme
       signing: ${{ github.event_name != 'pull_request' }}
+
+  # v2: the Keycloakify provider jar (login, account, admin, email).
+  build-keycloakify:
+    uses: ./.github/workflows/WORKFLOW-docker-build.yml
+    with:
+      context: keycloakify
+      image_name: floodnet-nyc/floodnet-keycloakify-theme
+      signing: ${{ github.event_name != 'pull_request' }}

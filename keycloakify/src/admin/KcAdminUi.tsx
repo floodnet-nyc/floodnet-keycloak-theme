@@ -19,7 +19,7 @@ import "./index.css";
 // FloodNet branding (tokens only). Loaded after index.css so it wins.
 import "./floodnet.css";
 
-document.title = "FloodNet Administration";
+document.title = "FloodNet SSO · Keycloak Admin";
 
 const router = createHashRouter([
     {

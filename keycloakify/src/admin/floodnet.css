@@ -1,0 +1,31 @@
+/*
+ * FloodNet admin console: minimal branding only.
+ *
+ * The admin console is kept as upstream Keycloak ships it so upgrades stay a
+ * version bump. This file only swaps the brand colours and typeface; the
+ * masthead logo is the owned assets/logo.svg. Anything beyond tokens belongs
+ * upstream, not here.
+ */
+
+:root {
+    --fn-teal: #0c7a68;
+    --fn-teal-deep: #07594c;
+    --fn-sans: "Avenir Next", "Avenir", "Segoe UI", "Trebuchet MS", sans-serif;
+
+    --pf-v5-global--FontFamily--text: var(--fn-sans);
+    --pf-v5-global--FontFamily--heading: var(--fn-sans);
+    --pf-v5-global--primary-color--100: var(--fn-teal);
+    --pf-v5-global--primary-color--200: var(--fn-teal-deep);
+    --pf-v5-global--link--Color: var(--fn-teal);
+    --pf-v5-global--link--Color--hover: var(--fn-teal-deep);
+    --pf-v5-c-spinner--Color: var(--fn-teal);
+}
+
+/* Dark mode keeps PatternFly's own dark palette, with lighter accents. */
+:root.pf-v5-theme-dark {
+    --pf-v5-global--primary-color--100: #4fd1b5;
+    --pf-v5-global--primary-color--200: #6affd3;
+    --pf-v5-global--link--Color: #4fd1b5;
+    --pf-v5-global--link--Color--hover: #6affd3;
+    --pf-v5-c-spinner--Color: #4fd1b5;
+}

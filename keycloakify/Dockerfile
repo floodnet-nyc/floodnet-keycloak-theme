@@ -21,4 +21,7 @@ COPY . .
 RUN npx keycloakify sync-extensions && npm run build-keycloak-theme
 
 FROM alpine
+# COPY --chmod also applies to the parent dirs it creates, which would leave them
+# 644 (not enterable by Keycloak's non-root user), so create them 755 first.
+RUN mkdir -p -m 755 /opt/keycloak/providers
 COPY --chmod=644 --from=build /src/dist_keycloak/floodnet-keycloak-theme.jar /opt/keycloak/providers/floodnet-keycloak-theme.jar

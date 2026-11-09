@@ -29,3 +29,11 @@
     --pf-v5-global--link--Color--hover: #6affd3;
     --pf-v5-c-spinner--Color: #4fd1b5;
 }
+
+/* The console shows a bare PatternFly spinner while it signs in and loads;
+ * upstream leaves it in the top-left corner. Center it in the viewport. */
+#root > .pf-v5-c-spinner {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+}

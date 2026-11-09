@@ -1794,3 +1794,11 @@ html body .fn-device__action .pf-v5-c-button:hover {
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+/* The console shows a bare PatternFly spinner while it signs in and loads;
+ * upstream leaves it in the top-left corner. Center it in the viewport. */
+#root > .pf-v5-c-spinner {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+}

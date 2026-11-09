@@ -12,9 +12,11 @@
 import logoUrl from "../assets/floodnet-logomark-ink.png";
 import { KeycloakMasthead, label, useEnvironment } from "../../shared/keycloak-ui-shared";
 import { Button } from "../../shared/@patternfly/react-core";
-import { ExternalLinkSquareAltIcon } from "../../shared/@patternfly/react-icons";
+import { CogIcon, ExternalLinkSquareAltIcon } from "../../shared/@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
 import { useHref } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getGroups } from "../api/methods";
 
 import { AccountEnvironment } from "..";
 
@@ -39,6 +41,46 @@ const ReferrerLink = () => {
             })}
         </Button>
     ) : null;
+};
+
+// Groups whose members can use this realm's admin console (see the realm's
+// realm-management roles in iot-platform config/keycloak/realm.yaml).
+const ADMIN_GROUP_PATHS = ["/server-admin"];
+
+// "Admin console" link for admins only. The account console's token carries
+// no realm-management roles, so membership comes from the account API's
+// /groups. Any failure (e.g. the user lacks view-groups) just hides the link.
+const AdminConsoleLink = () => {
+    const context = useEnvironment();
+    const { environment } = context;
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        getGroups({ signal: controller.signal, context })
+            .then(groups =>
+                setIsAdmin(groups.some(({ path }) => ADMIN_GROUP_PATHS.includes(path)))
+            )
+            .catch(() => setIsAdmin(false));
+        return () => controller.abort();
+    }, []);
+
+    if (!isAdmin) return null;
+
+    const href = `${environment.serverBaseUrl.replace(/\/$/, "")}/admin/${encodeURIComponent(environment.realm)}/console/`;
+
+    return (
+        <Button
+            data-testid="admin-console-link"
+            component="a"
+            href={href}
+            variant="link"
+            icon={<CogIcon />}
+            isInline
+        >
+            Admin console
+        </Button>
+    );
 };
 
 function getInitials(token: { given_name?: string; family_name?: string; preferred_username?: string } | undefined) {
@@ -86,9 +128,10 @@ export const Header = () => {
                 src: getAvatarDataUrl(keycloak.idTokenParsed),
                 alt: t("avatar")
             }}
-            toolbarItems={
-                environment.referrerUrl ? [<ReferrerLink key="link" />] : []
-            }
+            toolbarItems={[
+                ...(environment.referrerUrl ? [<ReferrerLink key="link" />] : []),
+                <AdminConsoleLink key="admin" />
+            ]}
         />
     );
 };
